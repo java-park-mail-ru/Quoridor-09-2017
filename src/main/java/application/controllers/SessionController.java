@@ -7,8 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import utils.requests.*;
-import utils.responses.SuccessResponse;
+import application.utils.requests.*;
+import application.utils.responses.SuccessResponse;
 
 import javax.servlet.http.HttpSession;
 

@@ -1,7 +1,7 @@
-package utils.Validators;
+package application.utils.Validators;
 
-import utils.requests.SignInRequest;
-import utils.requests.SignUpRequest;
+import application.utils.requests.SignInRequest;
+import application.utils.requests.SignUpRequest;
 
 import java.util.ArrayList;
 

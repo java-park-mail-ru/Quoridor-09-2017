@@ -1,4 +1,4 @@
-package utils.responses;
+package application.utils.responses;
 
 import application.User;
 
