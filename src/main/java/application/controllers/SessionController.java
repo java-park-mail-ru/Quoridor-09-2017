@@ -7,7 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import utils.*;
+import utils.requests.*;
+import utils.responses.SuccessResponse;
 
 import javax.servlet.http.HttpSession;
 
@@ -28,7 +29,7 @@ public class SessionController {
     @PostMapping(path = "/signin"/*, consumes = "application/json", produces = "application/json"*/)
     public ResponseEntity signin(@RequestBody SignInRequest request,
                                  HttpSession httpSession) {
-        final long id = db.getId(request.getLogin());
+        final long id = db.getId(request.getLoginOrEmail());
         if (db.checkPassword(id, request.getPassword())) {
             httpSession.setAttribute("userId", id);
 //        final User user = db.getUser(id);
@@ -45,7 +46,7 @@ public class SessionController {
         return ResponseEntity.ok("User session deleted");
     }
 
-    @PostMapping(path = "/current")
+    @PostMapping(path = "/currentUser")
     public ResponseEntity getCurUser(HttpSession httpSession) {
         final Object id = httpSession.getAttribute("userId");
         final User user;
@@ -60,7 +61,7 @@ public class SessionController {
         return ResponseEntity.ok(new SuccessResponse(user));
     }
 
-    @PostMapping(path = "/changeLogin")
+    @PostMapping(path = "/currentUser/changeLogin")
     public ResponseEntity changeLogin(@RequestBody ChangeLoginRequest request,
                                       HttpSession httpSession) {
         final Object id = httpSession.getAttribute("userId");
@@ -69,7 +70,7 @@ public class SessionController {
         return ResponseEntity.ok("Login changed");
     }
 
-    @PostMapping(path = "/changeEmail")
+    @PostMapping(path = "/currentUser/changeEmail")
     public ResponseEntity changeEmail(@RequestBody ChangeEmailRequest request,
                                       HttpSession httpSession) {
         final Object id = httpSession.getAttribute("userId");
@@ -78,32 +79,12 @@ public class SessionController {
         return ResponseEntity.ok("Email changed");
     }
 
-    @PostMapping(path = "/changePass")
+    @PostMapping(path = "/currentUser/changePass")
     public ResponseEntity changePass(@RequestBody ChangePassRequest request,
                                       HttpSession httpSession) {
         final Object id = httpSession.getAttribute("userId");
         final User user = db.getUser((Long) id);
         user.setEmail(request.getPassword());
         return ResponseEntity.ok("Password changed");
-    }
-
-    private static final class SuccessResponse {
-        private String login;
-        private String email;
-
-        private SuccessResponse(User user) {
-            this.login = user.getLogin();
-            this.email = user.getEmail();
-        }
-
-        @SuppressWarnings("unused")
-        public String getLogin() {
-            return login;
-        }
-
-        @SuppressWarnings("unused")
-        public String getEmail() {
-            return email;
-        }
     }
 }

@@ -19,6 +19,8 @@ public class UserDB {
         return db.get(id);
     }
 
+    //на вход теперь приходит либо логин, либо email
+    //обновить!!!
     public long getId(String login) {
         for (long i = 1; i < id; i++) {
             if (db.get(i).getLogin().equals(login)) {
