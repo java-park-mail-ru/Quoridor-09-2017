@@ -2,7 +2,7 @@ package application.controllers;
 
 import application.User;
 import application.UserService;
-import application.utils.Validators.Validator;
+import application.utils.validators.Validator;
 import application.utils.responses.BadResponse;
 import application.utils.responses.InfoResponse;
 import org.springframework.http.HttpStatus;

@@ -11,12 +11,10 @@ public class BadResponse {
 
     public BadResponse(ArrayList<String> errors) {
         final StringBuilder builder = new StringBuilder("");
-        int i = 0;
-        for (; i < errors.size() - 1; i++) {
-            builder.append(errors.get(i));
+        for (String error : errors) {
+            builder.append(error);
             builder.append('\n');
         }
-        builder.append(errors.get(i));
         this.errors = builder.toString();
     }
 

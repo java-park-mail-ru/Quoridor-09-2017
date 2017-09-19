@@ -1,4 +1,4 @@
-package application.utils.Validators;
+package application.utils.validators;
 
 import application.utils.requests.SignInRequest;
 import application.utils.requests.SignUpRequest;
