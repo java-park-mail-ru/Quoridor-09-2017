@@ -1,15 +1,16 @@
 language: java
 sudo: required
 jdk:
-  - oraclejdk8
+- oraclejdk8
+branches:
+  only:
+  - develop
 deploy:
   provider: heroku
+  app:
+    develop: jees-quoridor-backend
   api_key:
-    secure: $key
-  app: apoj
-  on:
-    repo: java-park-mail-ru/Quoridor-09-2017
-    branch: develop
-  skip_cleanup: true
-install:
-  - mvn test -B
+    develop:
+      secure: OfW4ydxaKw+mt+Cgne6g5aUm9KnKSI+PLyJwAxp52OneMrxfgccMM20HLCoBimwfpjsrCy3+O2VGT1GUoZ033h/5vgexwFVkZ1jcfUHpiaA7BddywPOd6/8oP/uzPv2ofZBK3D5VbnwteB+/h9KpjEJ9S/itbebC7iL2ExhXrgSj1OZicRi7nQbwhSCMksJp7voZcpyK+KAyucbS2gyUEe+iyDPQnWsaSBkKb6XBJf/1stez3WIAmYD6gZUEUHz8LNqjjqM9jleYuh+icVmxb8P7X3K5VgSZcsstPZtKUbd/W7VaL9BUYBfHCRwLaeTmzyZiyUiXhGBCxqpYWeHopkQ6BUfVt6RMUiNrDhaTzJ1IDgFaUgz3cElMX1lGqlWs8StN+Ba3iq/Ox9SLXkIuvNzvAb68fq2sp09VGvaWudAonwC5miXq9RRMPAnBRnA1/ZPLzHRe7kby7NBYA6LgeigffNzde42CkDBjT+TX70Pbxa/wcw1CqoTaw4NZWbB5S98Yzu5BrVJfiuG160HEjb8x1QN0IHvKZ490YVs8TS878dFp8IeQygDDwPG8PLbr0ansyy7KBMACxjCHHtEb90LsD4GNhg6bNjx0xrxJ7cDK30SVpiXkAZK4MosURlT8wjzinfEFUW6stfps8d05ZyUBNpvsn0cr/g3tXxs6Hww=
+#install:
+#- mvn test -B
