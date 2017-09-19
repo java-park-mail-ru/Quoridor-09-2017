@@ -65,7 +65,6 @@ public class SessionController {
         if (httpSession.getAttribute("userId") == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new BadResponse("Unauthorized"));
         }
-        httpSession.invalidate();
         httpSession.removeAttribute("userId");
         return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Successful logout"));
     }
@@ -88,9 +87,9 @@ public class SessionController {
     @PostMapping(path = "/currentUser/changeLogin")
     public ResponseEntity changeLogin(@RequestBody ChangeLoginRequest request,
                                       HttpSession httpSession) {
-        final String error = Validator.checkLogin(request.getLogin());
-        if (error != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(error));
+        final ArrayList<String> errors = Validator.checkLogin(request.getLogin());
+        if (errors != null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
         }
 
         final Object id = httpSession.getAttribute("userId");
@@ -112,9 +111,9 @@ public class SessionController {
     @PostMapping(path = "/currentUser/changeEmail")
     public ResponseEntity changeEmail(@RequestBody ChangeEmailRequest request,
                                       HttpSession httpSession) {
-        final String error = Validator.checkEmail(request.getEmail());
-        if (error != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(error));
+        final ArrayList<String> errors = Validator.checkEmail(request.getEmail());
+        if (errors != null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
         }
 
         final Object id = httpSession.getAttribute("userId");
@@ -135,13 +134,13 @@ public class SessionController {
     @PostMapping(path = "/currentUser/changePass")
     public ResponseEntity changePass(@RequestBody ChangePassRequest request,
                                       HttpSession httpSession) {
-        String error = Validator.checkPassword(request.getNewPassword());
-        if (error != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(error));
+        ArrayList<String> errors = Validator.checkPassword(request.getNewPassword());
+        if (errors != null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
         }
-        error = Validator.checkPassword(request.getOldPassword());
-        if (error != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(error));
+        errors = Validator.checkPassword(request.getOldPassword());
+        if (errors != null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
         }
 
         final Object id = httpSession.getAttribute("userId");
