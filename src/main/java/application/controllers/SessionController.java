@@ -43,11 +43,6 @@ public class SessionController {
     public ResponseEntity signin(@RequestBody SignInRequest request,
                                  HttpSession httpSession) {
 
-        final ArrayList<String> errors = Validator.checkSignIn(request);
-        if (errors != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
-        }
-
         final long id = userService.getId(request.getLoginOrEmail());
         if (id < 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Wrong login or email"));

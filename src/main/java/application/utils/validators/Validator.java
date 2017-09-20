@@ -1,6 +1,5 @@
 package application.utils.validators;
 
-import application.utils.requests.SignInRequest;
 import application.utils.requests.SignUpRequest;
 
 import java.util.ArrayList;
@@ -77,41 +76,6 @@ public class Validator {
         }
 
         return null;
-    }
-
-    public static ArrayList<String> checkEmailOrLogin(String loginOrEmail) {
-
-        final ArrayList<String> emailError = checkEmail(loginOrEmail);
-        final ArrayList<String> loginError = checkLogin(loginOrEmail);
-
-
-        if (loginError != null && emailError != null) {
-            final ArrayList<String> errors = new ArrayList<>();
-            errors.add("Incorrect login or email");
-            return errors;
-
-        }
-        return null;
-    }
-
-    public static ArrayList<String> checkSignIn(SignInRequest request) {
-        final ArrayList<String> errors = new ArrayList<>();
-
-        final ArrayList<String> emailAndLoginErrors = checkEmailOrLogin(request.getLoginOrEmail());
-        if (emailAndLoginErrors != null) {
-            errors.addAll(emailAndLoginErrors);
-        }
-
-        final ArrayList<String> passError = checkPassword(request.getPassword());
-        if (passError != null) {
-            errors.addAll(passError);
-        }
-
-        if (errors.isEmpty()) {
-            return null;
-        } else {
-            return errors;
-        }
     }
 
     public static ArrayList<String> checkSignUp(SignUpRequest request) {
