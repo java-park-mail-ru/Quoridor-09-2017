@@ -1,14 +1,20 @@
 package application;
 
 public class User {
+    private long id;
     private String login;
     private String password;
     private String email;
 
-    public User(String login, String password, String email) {
+    public User(long id, String login, String password, String email) {
+        this.id = id;
         this.email = email;
         this.login = login;
         this.password = password;
+    }
+
+    public long getId() {
+        return id;
     }
 
     public String getEmail() {

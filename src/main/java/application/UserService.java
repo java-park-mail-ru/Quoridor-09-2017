@@ -5,38 +5,24 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class UserService {
     private HashMap<Long, User> db;
-//    private static long id = 1;
     private static final AtomicLong ID_GENERATOR = new AtomicLong(1);
 
     public UserService() {
         db = new HashMap<>();
     }
 
-//    public long addUser(SignUpRequest request) {
-//        final User user = new User(request.getLogin(), request.getPassword(), request.getEmail());
-//        final long id = ID_GENERATOR.getAndIncrement();
-//        db.put(id, user);
-//        return id;
-//    }
-
     public long addUser(String login, String password, String email) {
-        final User user = new User(login, password, email);
         final long id = ID_GENERATOR.getAndIncrement();
+        final User user = new User(id, login, password, email);
         db.put(id, user);
         return id;
     }
-
-//    public long addUser(User user) {
-//        final long id = ID_GENERATOR.getAndIncrement();
-//        db.put(id, user);
-//        return id;
-//    }
 
     public User getUserById(long userId) {
         return db.get(userId);
     }
 
-    public User getUserByEmail(String email) {
+    private User getUserByEmail(String email) {
         for (long i = 1; i < ID_GENERATOR.get(); i++) {
             final User curUser = db.get(i);
             if (curUser.getEmail().equals(email)) {
@@ -46,7 +32,7 @@ public class UserService {
         return null;
     }
 
-    public User getUserByLogin(String login) {
+    private User getUserByLogin(String login) {
         for (long i = 1; i < ID_GENERATOR.get(); i++) {
             final User curUser = db.get(i);
             if (curUser.getLogin().equals(login)) {
@@ -73,32 +59,9 @@ public class UserService {
         return this.getUserByLogin(login) != null;
     }
 
-    public long getId(String loginOrEmail) {
-        for (long i = 1; i < ID_GENERATOR.get(); i++) {
-            if (db.get(i).getLogin().equals(loginOrEmail) || db.get(i).getEmail().equals(loginOrEmail)) {
-                return i;
-            }
-        }
-        return -1;
+    public long getId(User user) {
+        return user.getId();
     }
-
-//    public boolean hasLogin(String login) {
-//        for (long i = 1; i < ID_GENERATOR.get(); i++) {
-//            if (db.get(i).getLogin().equals(login)) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-//
-//    public boolean hasEmail(String email) {
-//        for (long i = 1; i < ID_GENERATOR.get(); i++) {
-//            if (db.get(i).getEmail().equals(email)) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
 
     public void changeEmail(long userId, String newEmail) {
         final User user = this.getUserById(userId);
