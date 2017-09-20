@@ -34,22 +34,22 @@ public class SessionController {
         if (errors != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
         }
-        final long id = userService.addUser(request);
+//        final long id = userService.addUser(request);
+        final long id = userService.addUser(request.getLogin(), request.getPassword(), request.getEmail());
         httpSession.setAttribute("userId", id);
-        return ResponseEntity.ok(new SuccessResponse(userService.getUser(id)));
+        return ResponseEntity.ok(new SuccessResponse(userService.getUserById(id)));
     }
 
     @PostMapping(path = "/signin")
     public ResponseEntity signin(@RequestBody SignInRequest request,
                                  HttpSession httpSession) {
-
         final long id = userService.getId(request.getLoginOrEmail());
         if (id < 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Wrong login or email"));
         }
         if (userService.checkPassword(id, request.getPassword())) {
             httpSession.setAttribute("userId", id);
-        return ResponseEntity.ok(new SuccessResponse(userService.getUser(id)));
+        return ResponseEntity.ok(new SuccessResponse(userService.getUserById(id)));
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Wrong password"));
         }
@@ -69,7 +69,7 @@ public class SessionController {
         final Object id = httpSession.getAttribute("userId");
         final User user;
         if (id instanceof Long) {
-            user = userService.getUser((Long) id);
+            user = userService.getUserById((Long) id);
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
             }
@@ -90,7 +90,7 @@ public class SessionController {
         final Object id = httpSession.getAttribute("userId");
         final User user;
         if (id instanceof Long) {
-            user = userService.getUser((Long) id);
+            user = userService.getUserById((Long) id);
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
             }
@@ -98,7 +98,7 @@ public class SessionController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
         }
 
-        userService.changeLogin((Long) id, user, request.getLogin());
+        userService.changeLogin((Long) id, request.getLogin());
         return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Login changed"));
 
     }
@@ -114,7 +114,7 @@ public class SessionController {
         final Object id = httpSession.getAttribute("userId");
         final User user;
         if (id instanceof Long) {
-            user = userService.getUser((Long) id);
+            user = userService.getUserById((Long) id);
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
             }
@@ -122,7 +122,7 @@ public class SessionController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
         }
 
-        userService.changeEmail((Long) id, user, request.getEmail());
+        userService.changeEmail((Long) id, request.getEmail());
         return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Email changed"));
     }
 
@@ -141,7 +141,7 @@ public class SessionController {
         final Object id = httpSession.getAttribute("userId");
         final User user;
         if (id instanceof Long) {
-            user = userService.getUser((Long) id);
+            user = userService.getUserById((Long) id);
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
             }
@@ -149,7 +149,7 @@ public class SessionController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
         }
 
-        userService.changePassword((Long) id, user, request.getNewPassword());
+        userService.changePassword((Long) id, request.getNewPassword());
         return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Password changed"));
     }
 }
