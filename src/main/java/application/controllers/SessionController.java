@@ -31,6 +31,12 @@ public class SessionController {
         if (errors != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
         }
+        if ((userService.emailExists(request.getEmail()))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Email already in use"));
+        }
+        if ((userService.emailExists(request.getLogin()))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Login already in use"));
+        }
         final long id = userService.addUser(request.getLogin(), request.getPassword(), request.getEmail());
         httpSession.setAttribute("userId", id);
         return ResponseEntity.ok(new SuccessResponse(userService.getUserById(id)));
@@ -127,7 +133,7 @@ public class SessionController {
 
     @PostMapping(path = "/currentUser/changePass")
     public ResponseEntity changePass(@RequestBody ChangePassRequest request,
-                                      HttpSession httpSession) {
+                                     HttpSession httpSession) {
         ArrayList<String> errors = Validator.checkPassword(request.getNewPassword());
         if (errors != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
