@@ -34,7 +34,7 @@ public class SessionController {
         if ((userService.emailExists(request.getEmail()))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Email already in use"));
         }
-        if ((userService.emailExists(request.getLogin()))) {
+        if ((userService.loginExists(request.getLogin()))) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Login already in use"));
         }
         final long id = userService.addUser(request.getLogin(), request.getPassword(), request.getEmail());
