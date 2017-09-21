@@ -1,43 +1,71 @@
 package application;
 
-import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+
+@SuppressWarnings({"SqlDialectInspection", "SqlNoDataSourceInspection"})
+@Service
+@Transactional
 public class UserService {
-    private HashMap<Long, User> db;
-    private static final AtomicLong ID_GENERATOR = new AtomicLong(1);
+    private final JdbcTemplate template;
 
-    public UserService() {
-        db = new HashMap<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger("application");
+
+    @Autowired
+    public UserService(JdbcTemplate template) {
+        this.template = template;
     }
 
+    private static final RowMapper<User> USER_MAP = (res, num) -> new User(res.getLong("id"),
+            res.getString("login"), res.getString("password"), res.getString("email"));
+
+    @SuppressWarnings("ConstantConditions")
     public long addUser(String login, String password, String email) {
-        final long id = ID_GENERATOR.getAndIncrement();
-        final User user = new User(id, login, password, email);
-        db.put(id, user);
-        return id;
+        try {
+            final String query = "INSERT INTO users (login, email, password) VALUES (?, ?, ?) RETURNING *";
+            return template.queryForObject(query, USER_MAP, login, email, password).getId();
+        } catch (DataAccessException e) {
+            LOGGER.error("Can't add user to DB");
+            return -1;
+        }
     }
 
     public User getUserById(long userId) {
-        return db.get(userId);
+        try {
+            final String query = "SELECT * FROM users u WHERE u.id = ?";
+            return template.queryForObject(query, USER_MAP, userId);
+        } catch (EmptyResultDataAccessException e) {
+            LOGGER.error("Can't find in DB user with id = " + userId);
+            return null;
+        }
     }
 
     private User getUserByEmail(String email) {
-        for (User user : db.values()) {
-            if (user.getEmail().equals(email)) {
-                return user;
-            }
+        try {
+            final String query = "SELECT * FROM users u WHERE lower(u.email) = lower(?)";
+            return template.queryForObject(query, USER_MAP, email);
+        } catch (EmptyResultDataAccessException e) {
+            LOGGER.error("Can't find in DB user with email = " + email);
+            return null;
         }
-        return null;
     }
 
     private User getUserByLogin(String login) {
-        for (User user : db.values()) {
-            if (user.getLogin().equals(login)) {
-                return user;
-            }
+        try {
+            final String query = "SELECT * FROM users u WHERE lower(u.login) = lower(?)";
+            return template.queryForObject(query, USER_MAP, login);
+        } catch (EmptyResultDataAccessException e) {
+            LOGGER.error("Can't find in DB user with login = " + login);
+            return null;
         }
-        return null;
     }
 
     public User getUserByEmailOrLogin(String emailOrLogin) {
@@ -61,22 +89,37 @@ public class UserService {
         return user.getId();
     }
 
-    public void changeEmail(long userId, String newEmail) {
-        final User user = this.getUserById(userId);
-        user.setEmail(newEmail);
-        db.put(userId, user);
+    public boolean changeEmail(long userId, String newEmail) {
+        try {
+            final String query = "UPDATE users SET email = ? WHERE id = ?";
+            template.update(query, newEmail, userId);
+            return true;
+        } catch (DataAccessException e) {
+            LOGGER.error("Can't update email of user with id = " + userId);
+            return false;
+        }
     }
 
-    public void changeLogin(long userId, String newLogin) {
-        final User user = this.getUserById(userId);
-        user.setLogin(newLogin);
-        db.put(userId, user);
+    public boolean changeLogin(long userId, String newLogin) {
+        try {
+            final String query = "UPDATE users SET login = ? WHERE id = ?";
+            template.update(query, newLogin, userId);
+            return true;
+        } catch (DataAccessException e) {
+            LOGGER.error("Can't update login of user with id = " + userId);
+            return false;
+        }
     }
 
-    public void changePassword(long userId, String newPassword) {
-        final User user = this.getUserById(userId);
-        user.setPassword(newPassword);
-        db.put(userId, user);
+    public boolean changePassword(long userId, String newPassword) {
+        try {
+            final String query = "UPDATE users SET password = ? WHERE id = ?";
+            template.update(query, newPassword, userId);
+            return true;
+        } catch (DataAccessException e) {
+            LOGGER.error("Can't update password of user with id = " + userId);
+            return false;
+        }
     }
 
     public boolean checkPassword(long userId, String password) {
