@@ -90,7 +90,9 @@ public class SessionController {
         if (errors != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
         }
-
+        if ((userService.loginExists(request.getLogin()))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Login already in use"));
+        }
         final Long id;
         try {
             id = (Long) httpSession.getAttribute("userId");
@@ -113,6 +115,10 @@ public class SessionController {
         final ArrayList<String> errors = Validator.checkEmail(request.getEmail());
         if (errors != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
+        }
+
+        if ((userService.emailExists(request.getEmail()))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Email already in use"));
         }
 
         final Long id;
