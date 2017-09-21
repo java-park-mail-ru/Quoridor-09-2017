@@ -23,20 +23,18 @@ public class UserService {
     }
 
     private User getUserByEmail(String email) {
-        for (long i = 1; i < ID_GENERATOR.get(); i++) {
-            final User curUser = db.get(i);
-            if (curUser.getEmail().equals(email)) {
-                return curUser;
+        for (User user : db.values()) {
+            if (user.getEmail().equals(email)) {
+                return user;
             }
         }
         return null;
     }
 
     private User getUserByLogin(String login) {
-        for (long i = 1; i < ID_GENERATOR.get(); i++) {
-            final User curUser = db.get(i);
-            if (curUser.getLogin().equals(login)) {
-                return curUser;
+        for (User user : db.values()) {
+            if (user.getLogin().equals(login)) {
+                return user;
             }
         }
         return null;

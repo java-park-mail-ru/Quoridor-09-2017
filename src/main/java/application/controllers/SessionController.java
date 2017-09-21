@@ -17,7 +17,6 @@ import application.utils.responses.SuccessResponse;
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 
-@SuppressWarnings("Duplicates")
 @CrossOrigin(origins = {"https://quoridor-jees.herokuapp.com", "https://jees-quoridor.herokuapp.com"})
 @RestController
 public class SessionController {
