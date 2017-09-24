@@ -19,7 +19,7 @@ public class BadResponse {
     }
 
     @SuppressWarnings("unused")
-    public String getErrors() {
+    public String getError() {
         return errors;
     }
 }
