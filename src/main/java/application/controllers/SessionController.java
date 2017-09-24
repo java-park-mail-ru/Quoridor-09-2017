@@ -17,7 +17,7 @@ import application.utils.responses.SuccessResponse;
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 
-@CrossOrigin(origins = {"https://quoridor-jees.herokuapp.com", "https://jees-quoridor.herokuapp.com"})
+@CrossOrigin(origins = {"https://tp314rates.herokuapp.com", "https://project-motion.herokuapp.com", "http://localhost:8080", "http://127.0.0.1:8080"})
 @RestController
 public class SessionController {
     private static UserService userService = new UserService();
