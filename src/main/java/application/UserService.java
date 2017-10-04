@@ -1,8 +1,11 @@
 package application;
 
+import org.springframework.stereotype.Service;
+
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+@Service
 public class UserService {
     private HashMap<Long, User> db;
     private static final AtomicLong ID_GENERATOR = new AtomicLong(1);
