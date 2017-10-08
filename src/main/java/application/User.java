@@ -1,5 +1,6 @@
 package application;
 
+@SuppressWarnings("unused")
 public class User {
     private long id;
     private String login;

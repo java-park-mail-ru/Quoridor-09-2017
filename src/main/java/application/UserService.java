@@ -1,46 +1,57 @@
 package application;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicLong;
-
+@SuppressWarnings({"SqlDialectInspection", "SqlNoDataSourceInspection"})
 @Service
+@Transactional
 public class UserService {
-    private HashMap<Long, User> db;
-    private static final AtomicLong ID_GENERATOR = new AtomicLong(1);
+    private final JdbcTemplate template;
 
-    public UserService() {
-        db = new HashMap<>();
+    @Autowired
+    public UserService(JdbcTemplate template) {
+        this.template = template;
     }
 
+    private static final RowMapper<User> USER_MAP = (res, num) -> new User(res.getLong("id"),
+            res.getString("login"), res.getString("password"), res.getString("email"));
+
+    @SuppressWarnings("ConstantConditions")
     public long addUser(String login, String password, String email) {
-        final long id = ID_GENERATOR.getAndIncrement();
-        final User user = new User(id, login, password, email);
-        db.put(id, user);
-        return id;
+        final String query = "INSERT INTO users (login, email, password) VALUES (?, ?, ?) RETURNING *";
+        return template.queryForObject(query, USER_MAP, login, email, password).getId();
     }
 
     public User getUserById(long userId) {
-        return db.get(userId);
+        try {
+            final String query = "SELECT * FROM users u WHERE u.id = ?";
+            return template.queryForObject(query, USER_MAP, userId);
+        } catch (DataAccessException e) {
+            return null;
+        }
     }
 
     private User getUserByEmail(String email) {
-        for (User user : db.values()) {
-            if (user.getEmail().equals(email)) {
-                return user;
-            }
+        try {
+            final String query = "SELECT * FROM users u WHERE lower(u.email) = lower(?)";
+            return template.queryForObject(query, USER_MAP, email);
+        } catch (DataAccessException e) {
+            return null;
         }
-        return null;
     }
 
     private User getUserByLogin(String login) {
-        for (User user : db.values()) {
-            if (user.getLogin().equals(login)) {
-                return user;
-            }
+        try {
+            final String query = "SELECT * FROM users u WHERE lower(u.login) = lower(?)";
+            return template.queryForObject(query, USER_MAP, login);
+        } catch (DataAccessException e) {
+            return null;
         }
-        return null;
     }
 
     public User getUserByEmailOrLogin(String emailOrLogin) {
@@ -65,21 +76,24 @@ public class UserService {
     }
 
     public void changeEmail(long userId, String newEmail) {
-        final User user = this.getUserById(userId);
-        user.setEmail(newEmail);
-        db.put(userId, user);
+        final String query = "UPDATE users SET email = ?"
+                + "WHERE id = ?"
+                + "RETURNING *";
+        template.queryForObject(query, USER_MAP, newEmail, userId);
     }
 
     public void changeLogin(long userId, String newLogin) {
-        final User user = this.getUserById(userId);
-        user.setLogin(newLogin);
-        db.put(userId, user);
+        final String query = "UPDATE users SET login = ?"
+                + "WHERE id = ?"
+                + "RETURNING *";
+        template.queryForObject(query, USER_MAP, newLogin, userId);
     }
 
     public void changePassword(long userId, String newPassword) {
-        final User user = this.getUserById(userId);
-        user.setPassword(newPassword);
-        db.put(userId, user);
+        final String query = "UPDATE users SET password = ?"
+                + "WHERE id = ?"
+                + "RETURNING *";
+        template.queryForObject(query, USER_MAP, newPassword, userId);
     }
 
     public boolean checkPassword(long userId, String password) {
