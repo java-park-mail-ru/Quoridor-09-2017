@@ -12,7 +12,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest(classes = Application.class)
 @RunWith(SpringRunner.class)
 public class UserServiceTest {
-    
+
     @Autowired
     UserService userService;
 
@@ -31,16 +31,16 @@ public class UserServiceTest {
         assertTrue(id > 0);
     }
 
-    @Test
-    public void getUserByEmailOrLogin() {
-        final User user1 = userService.getUserByEmailOrLogin("test");
-        assertNotNull(user1);
-        assertEquals(user1.getLogin(), UserServiceTest.testUser.getLogin());
-
-        final User user2 = userService.getUserByEmailOrLogin("test@mail.ru");
-        assertNotNull(user2);
-        assertEquals(user2.getLogin(), UserServiceTest.testUser.getLogin());
-    }
+//    @Test
+//    public void getUserByEmailOrLogin() {
+//        final User user1 = userService.getUserByEmailOrLogin("test");
+//        assertNotNull(user1);
+//        assertEquals(user1.getLogin(), UserServiceTest.testUser.getLogin());
+//
+//        final User user2 = userService.getUserByEmailOrLogin("test@mail.ru");
+//        assertNotNull(user2);
+//        assertEquals(user2.getLogin(), UserServiceTest.testUser.getLogin());
+//    }
 
     @Test
     public void getUserById() {
