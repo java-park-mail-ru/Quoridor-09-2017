@@ -1,6 +1,5 @@
-import application.Application;
-import application.User;
-import application.UserService;
+package application;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest(classes = Application.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @RunWith(SpringRunner.class)
 @Transactional
 public class UserServiceTest {
@@ -18,13 +17,13 @@ public class UserServiceTest {
     @Autowired
     UserService userService;
 
-    private static long testId;
-    private static User testUser;
+    private long testId;
+    private User testUser;
 
     @Before
     public void setup() {
-        UserServiceTest.testId = userService.addUser("test12345", "12345", "test12345@mail.ru");
-        UserServiceTest.testUser = userService.getUserById(UserServiceTest.testId);
+        testId = userService.addUser("test12345", "12345", "test12345@mail.ru");
+        testUser = userService.getUserById(testId);
     }
 
     @Test
@@ -37,11 +36,11 @@ public class UserServiceTest {
     public void getUserByEmailOrLogin() {
         final User user1 = userService.getUserByEmailOrLogin("test12345");
         assertNotNull(user1);
-        assertEquals(user1.getLogin(), UserServiceTest.testUser.getLogin());
+        assertEquals(user1.getLogin(), testUser.getLogin());
 
         final User user2 = userService.getUserByEmailOrLogin("test12345@mail.ru");
         assertNotNull(user2);
-        assertEquals(user2.getLogin(), UserServiceTest.testUser.getLogin());
+        assertEquals(user2.getLogin(), testUser.getLogin());
 
         final User user3 = userService.getUserByEmailOrLogin("asdfg");
         assertNull(user3);
@@ -49,11 +48,11 @@ public class UserServiceTest {
 
     @Test
     public void getUserById() {
-        final User user = userService.getUserById(UserServiceTest.testId);
-        assertEquals(user.getId(), UserServiceTest.testUser.getId());
-        assertEquals(user.getLogin(), UserServiceTest.testUser.getLogin());
-        assertEquals(user.getEmail(), UserServiceTest.testUser.getEmail());
-        assertEquals(user.getPassword(), UserServiceTest.testUser.getPassword());
+        final User user = userService.getUserById(testId);
+        assertEquals(user.getId(), testUser.getId());
+        assertEquals(user.getLogin(), testUser.getLogin());
+        assertEquals(user.getEmail(), testUser.getEmail());
+        assertEquals(user.getPassword(), testUser.getPassword());
     }
 
     @Test
@@ -68,8 +67,8 @@ public class UserServiceTest {
 
     @Test
     public void getId() {
-        final long id = userService.getId(UserServiceTest.testUser);
-        assertEquals(id, UserServiceTest.testId);
+        final long id = userService.getId(testUser);
+        assertEquals(id, testId);
     }
 
     @Test
@@ -104,6 +103,6 @@ public class UserServiceTest {
 
     @Test
     public void checkPassword() {
-        assertTrue(userService.checkPassword(UserServiceTest.testId, "12345"));
+        assertTrue(userService.checkPassword(testId, "12345"));
     }
 }

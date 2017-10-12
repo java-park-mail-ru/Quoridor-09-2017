@@ -96,18 +96,18 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
         }
 
-        ArrayList<String> errors = Validator.checkPassword(request.getNewPassword());
-        if (errors != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
-        }
-        errors = Validator.checkPassword(request.getOldPassword());
-        if (errors != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
-        }
-
         final User user = userService.getUserById(id);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
+        }
+
+        if (!userService.checkPassword(id, request.getOldPassword())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Wrong old password"));
+        }
+
+        final ArrayList<String> errors = Validator.checkPassword(request.getNewPassword());
+        if (errors != null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
         }
 
         userService.changePassword(id, request.getNewPassword());
