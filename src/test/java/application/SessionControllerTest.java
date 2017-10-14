@@ -33,6 +33,7 @@ public class SessionControllerTest {
 
     @Before
     public void setup() {
+        userService.clearDB();
         userService.addUser("test12345", "12345", "test12345@mail.ru");
     }
 

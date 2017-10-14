@@ -22,6 +22,7 @@ public class UserServiceTest {
 
     @Before
     public void setup() {
+        userService.clearDB();
         testId = userService.addUser("test12345", "12345", "test12345@mail.ru");
         testUser = userService.getUserById(testId);
     }

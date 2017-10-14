@@ -99,4 +99,9 @@ public class UserService {
     public boolean checkPassword(long userId, String password) {
         return this.getUserById(userId).getPassword().equals(password);
     }
+
+    public void clearDB() {
+        final String query = "TRUNCATE TABLE users CASCADE";
+        template.update(query);
+    }
 }

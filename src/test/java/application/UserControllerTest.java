@@ -34,6 +34,7 @@ public class UserControllerTest {
 
     @Before
     public void setup() {
+        userService.clearDB();
         id = userService.addUser("test12345", "12345", "test12345@mail.ru");
     }
 
