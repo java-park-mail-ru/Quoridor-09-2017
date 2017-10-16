@@ -68,5 +68,4 @@ public class SessionController {
         httpSession.removeAttribute("userId");
         return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Successful logout"));
     }
-
 }
