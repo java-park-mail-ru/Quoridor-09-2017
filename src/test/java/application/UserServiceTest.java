@@ -1,5 +1,6 @@
 package application;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,12 +18,15 @@ public class UserServiceTest {
     @Autowired
     UserService userService;
 
+    @Autowired
+    ServiceForTests serviceForTests;
+
     private long testId;
     private User testUser;
 
     @Before
     public void setup() {
-        userService.clearDB();
+        serviceForTests.clearDB();
         testId = userService.addUser("test12345", "12345", "test12345@mail.ru");
         testUser = userService.getUserById(testId);
     }
@@ -105,5 +109,10 @@ public class UserServiceTest {
     @Test
     public void checkPassword() {
         assertTrue(userService.checkPassword(testId, "12345"));
+    }
+
+    @After
+    public void tearDown() {
+        serviceForTests.clearDB();
     }
 }

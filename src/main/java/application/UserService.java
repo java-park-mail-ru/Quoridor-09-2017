@@ -1,17 +1,22 @@
 package application;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 @SuppressWarnings({"SqlDialectInspection", "SqlNoDataSourceInspection"})
 @Service
 @Transactional
 public class UserService {
     private final JdbcTemplate template;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger("application");
 
     @Autowired
     public UserService(JdbcTemplate template) {
@@ -31,7 +36,8 @@ public class UserService {
         try {
             final String query = "SELECT * FROM users u WHERE u.id = ?";
             return template.queryForObject(query, USER_MAP, userId);
-        } catch (DataAccessException e) {
+        } catch (EmptyResultDataAccessException e) {
+            LOGGER.error("Can't find in DB user with id = " + userId);
             return null;
         }
     }
@@ -40,7 +46,8 @@ public class UserService {
         try {
             final String query = "SELECT * FROM users u WHERE lower(u.email) = lower(?)";
             return template.queryForObject(query, USER_MAP, email);
-        } catch (DataAccessException e) {
+        } catch (EmptyResultDataAccessException e) {
+            LOGGER.error("Can't find in DB user with email = " + email);
             return null;
         }
     }
@@ -49,7 +56,8 @@ public class UserService {
         try {
             final String query = "SELECT * FROM users u WHERE lower(u.login) = lower(?)";
             return template.queryForObject(query, USER_MAP, login);
-        } catch (DataAccessException e) {
+        } catch (EmptyResultDataAccessException e) {
+            LOGGER.error("Can't find in DB user with login = " + login);
             return null;
         }
     }
@@ -76,32 +84,21 @@ public class UserService {
     }
 
     public void changeEmail(long userId, String newEmail) {
-        final String query = "UPDATE users SET email = ?"
-                + "WHERE id = ?"
-                + "RETURNING *";
-        template.queryForObject(query, USER_MAP, newEmail, userId);
+        final String query = "UPDATE users SET email = ? WHERE id = ?";
+        template.update(query, newEmail, userId);
     }
 
     public void changeLogin(long userId, String newLogin) {
-        final String query = "UPDATE users SET login = ?"
-                + "WHERE id = ?"
-                + "RETURNING *";
-        template.queryForObject(query, USER_MAP, newLogin, userId);
+        final String query = "UPDATE users SET login = ? WHERE id = ?";
+        template.update(query, newLogin, userId);
     }
 
     public void changePassword(long userId, String newPassword) {
-        final String query = "UPDATE users SET password = ?"
-                + "WHERE id = ?"
-                + "RETURNING *";
-        template.queryForObject(query, USER_MAP, newPassword, userId);
+        final String query = "UPDATE users SET password = ? WHERE id = ?";
+        template.update(query, newPassword, userId);
     }
 
     public boolean checkPassword(long userId, String password) {
         return this.getUserById(userId).getPassword().equals(password);
-    }
-
-    public void clearDB() {
-        final String query = "TRUNCATE TABLE users CASCADE";
-        template.update(query);
     }
 }

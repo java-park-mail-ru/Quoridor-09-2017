@@ -1,5 +1,6 @@
 package application;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,7 +12,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.MediaType;
-
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,11 +29,14 @@ public class SessionControllerTest {
     private UserService userService;
 
     @Autowired
+    private ServiceForTests serviceForTests;
+
+    @Autowired
     private MockMvc mockMvc;
 
     @Before
     public void setup() {
-        userService.clearDB();
+        serviceForTests.clearDB();
         userService.addUser("test12345", "12345", "test12345@mail.ru");
     }
 
@@ -129,5 +132,10 @@ public class SessionControllerTest {
         mockMvc.perform(delete("/signout"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("error").value("Unauthorized"));
+    }
+
+    @After
+    public void tearDown() {
+        serviceForTests.clearDB();
     }
 }
