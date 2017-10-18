@@ -11,6 +11,8 @@ before_script:
   - psql -c "create user javaman1 with password '12345';" -U postgres
   - psql -c "create database javaman1;" -U postgres
   - psql -c "grant all on database javaman1 to javaman1;" -U postgres
+  - psql -c "create database javaman1_test;" -U postgres
+  - psql -c "grant all on database javaman1_test to javaman1;" -U postgres
 
 
 deploy:
