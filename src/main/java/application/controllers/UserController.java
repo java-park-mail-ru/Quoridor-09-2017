@@ -59,8 +59,11 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
         }
 
-        userService.changeLogin(id, request.getLogin());
-        return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Login changed"));
+        if (userService.changeLogin(id, request.getLogin())) {
+            return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Login changed"));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Can't update login"));
+        }
     }
 
     @PatchMapping(path = "/currentUser/changeEmail")
@@ -84,8 +87,11 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
         }
 
-        userService.changeEmail(id, request.getEmail());
-        return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Email changed"));
+        if (userService.changeEmail(id, request.getEmail())) {
+            return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Email changed"));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Can't update email"));
+        }
     }
 
     @PatchMapping(path = "/currentUser/changePass")
@@ -110,7 +116,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
         }
 
-        userService.changePassword(id, request.getNewPassword());
-        return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Password changed"));
+        if (userService.changePassword(id, request.getNewPassword())) {
+            return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Password changed"));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Can't update password"));
+        }
     }
 }

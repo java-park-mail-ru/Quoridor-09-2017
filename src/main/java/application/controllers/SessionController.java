@@ -40,6 +40,9 @@ public class SessionController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Login already in use"));
         }
         final long id = userService.addUser(request.getLogin(), request.getPassword(), request.getEmail());
+        if (id < 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Can't add user to DB"));
+        }
         httpSession.setAttribute("userId", id);
         return ResponseEntity.ok(new SuccessResponse(userService.getUserById(id)));
     }
