@@ -5,9 +5,19 @@ jdk:
 branches:
   only:
   - develop
+services:
+  - postgresql
+before_script:
+  - psql -c "create user javaman1 with password '12345';" -U postgres
+  - psql -c "create database javaman1;" -U postgres
+  - psql -c "grant all on database javaman1 to javaman1;" -U postgres
+  - psql -c "create database javaman1_test;" -U postgres
+  - psql -c "grant all on database javaman1_test to javaman1;" -U postgres
+
+
 deploy:
   provider: heroku
   app:
     develop: jees-quoridor-backend
   api_key:
-    secure: Qn5IfGU0NW713CinT9KXOA0/oyojdso0s2fh5oC79gVJHdTyx5utsqaKlcthniE0JVRaTe09iIR+yxND8IR0ssFBvEXdiAkAXKHt/Ix3V8hBRNZA+EuNy3SPHV/tZ7x+4+NmxaDPKn1pP3kC2CRVvLrDOoKQjxtsgy7O816RdN22qqXYLh8tcvREM55ihWKgBBboql6n2eD5w/6WI5dMxegd/nEw5aniZoPgcqGQOS5Uzx/ojj/79eMgTlofxtOQW3x2gSQBTNbSFvRjNWrbaIkrPJczcht5XfqVdWXiyVE9wTvd+IDDMln0MfcU2CdI56jcwAel202Ph2GT/klihQiRj/4z0c8vSYiie6K+LgaM3eVzpxXBhX8zZ+ZEWxBzzaMmJpPmG2pNd6dK36wUwza1fMtkPvDDCpWdReuI5/m1agy9pvvGF1rBw833Q3dYZav5F6vAqxFbcO6s0LdlxQBhcwc97kywnTdcRt4WpZhP/vQhWhpWqT/NDk7onTe8t6X3yKWtTZ0rfVWPqfc5MPrwFrTG7XwS4BvfFb8t/lawrGc9BDbsOyqkb6shV++spaYoOYu+SuHrEdDNPvRVUAjcgMQFygGFky90iZwfJ2kkMuLL6S9MpYl9I/td1fNcqzYPi4++u2X1jbAkEe9l3P8n/ZXngMEM1wjMbzbX3Xs=
+    secure: YsvNiXBy04TB4RoekKJHd+AdgxjY2EtRgAYVBOdtc8MW9oMBMy+s7lENfkS9qqi+AvwGbK3MLw70h58NTs/LWZqsPMH3lKZ9UIVEZy9+ZEa5VrURgLApdmTBMzO+WSly+vP0jmDwiQepRU4kSiJq2KGuNIm3HBybDz3DwRJIThyB6+82Hk0ptZM/HoorP2xi1MG03TpoPDJikwNAifnk0KXgm/vxHnf20fmqxTL5fxqsF4mqywqj2q3c+QzaCLQpSdnTncU77NdVI6NzWgI3s15Mch/kKazIp8Ren/Ol1bwMw5/X46BOhVVYGWIg8k6x23itxhQW7Ce91+gQXVDjcN4BUcWkKKGUUGg9o1W1KfsV9DvdmhdVN3XHGkdSM4yLL1Ql5rfH0b4dTVyyMzAyLUNaOF4jXOUk2dfE+VD2bBR+RNoTcpbuo2NjyOOTHf7s8nO1tHWMj0Uhi5RY1GZrgYS/Vumb1qfylBrgBMcoc/iq2o/ENG+IhbG8MZAuX1yJ3KMFoO5VGCc6dqSAejueSeT6oklV5v1cIXCv+Ir3pUM4XhR8ILqoLn79GqSlc9bVN1bJFNEQdSsRqZJxuHP3GISyom7VeW3IpHUFxoDKoVz72ARl15cH1uHka4caXm26fn+XwYSM03Ln+IFtzqJ2vgWE3ZM5ROAb946AnVaju0Y=
