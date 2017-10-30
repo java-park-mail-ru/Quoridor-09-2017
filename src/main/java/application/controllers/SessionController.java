@@ -5,22 +5,25 @@ import application.UserService;
 import application.utils.validators.Validator;
 import application.utils.responses.BadResponse;
 import application.utils.responses.InfoResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import application.utils.requests.*;
 import application.utils.responses.SuccessResponse;
 
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 
-@CrossOrigin(origins = {"https://quoridor-jees.herokuapp.com", "https://jees-quoridor.herokuapp.com"})
+@CrossOrigin(origins = {"https://jees-quoridor.herokuapp.com", "https://quoridor-jees.herokuapp.com", "http://localhost:8080", "http://127.0.0.1:8080"})
 @RestController
 public class SessionController {
-    private static UserService userService = new UserService();
+    private final UserService userService;
+
+    @Autowired
+    public SessionController(UserService userService) {
+        this.userService = userService;
+    }
 
     @PostMapping(path = "/signup")
     public ResponseEntity signup(@RequestBody SignUpRequest request,
@@ -37,6 +40,9 @@ public class SessionController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Login already in use"));
         }
         final long id = userService.addUser(request.getLogin(), request.getPassword(), request.getEmail());
+        if (id < 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Can't add user to DB"));
+        }
         httpSession.setAttribute("userId", id);
         return ResponseEntity.ok(new SuccessResponse(userService.getUserById(id)));
     }
@@ -57,7 +63,7 @@ public class SessionController {
         }
     }
 
-    @PostMapping(path = "/signout")
+    @DeleteMapping(path = "/signout")
     public ResponseEntity signout(HttpSession httpSession) {
         if (httpSession.getAttribute("userId") == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new BadResponse("Unauthorized"));
@@ -66,101 +72,4 @@ public class SessionController {
         return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Successful logout"));
     }
 
-    @PostMapping(path = "/currentUser")
-    public ResponseEntity getCurUser(HttpSession httpSession) {
-        final Long id;
-        try {
-            id = (Long) httpSession.getAttribute("userId");
-        } catch (ClassCastException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
-        }
-
-        final User user = userService.getUserById(id);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
-        }
-        return ResponseEntity.ok(new SuccessResponse(user));
-    }
-
-    @PostMapping(path = "/currentUser/changeLogin")
-    public ResponseEntity changeLogin(@RequestBody ChangeLoginRequest request,
-                                      HttpSession httpSession) {
-        final ArrayList<String> errors = Validator.checkLogin(request.getLogin());
-        if (errors != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
-        }
-        if ((userService.loginExists(request.getLogin()))) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Login already in use"));
-        }
-        final Long id;
-        try {
-            id = (Long) httpSession.getAttribute("userId");
-        } catch (ClassCastException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
-        }
-
-        final User user = userService.getUserById(id);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
-        }
-
-        userService.changeLogin(id, request.getLogin());
-        return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Login changed"));
-    }
-
-    @PostMapping(path = "/currentUser/changeEmail")
-    public ResponseEntity changeEmail(@RequestBody ChangeEmailRequest request,
-                                      HttpSession httpSession) {
-        final ArrayList<String> errors = Validator.checkEmail(request.getEmail());
-        if (errors != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
-        }
-
-        if ((userService.emailExists(request.getEmail()))) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Email already in use"));
-        }
-
-        final Long id;
-        try {
-            id = (Long) httpSession.getAttribute("userId");
-        } catch (ClassCastException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
-        }
-
-        final User user = userService.getUserById(id);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
-        }
-
-        userService.changeEmail(id, request.getEmail());
-        return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Email changed"));
-    }
-
-    @PostMapping(path = "/currentUser/changePass")
-    public ResponseEntity changePass(@RequestBody ChangePassRequest request,
-                                     HttpSession httpSession) {
-        ArrayList<String> errors = Validator.checkPassword(request.getNewPassword());
-        if (errors != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
-        }
-        errors = Validator.checkPassword(request.getOldPassword());
-        if (errors != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse(errors));
-        }
-
-        final Long id;
-        try {
-            id = (Long) httpSession.getAttribute("userId");
-        } catch (ClassCastException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
-        }
-
-        final User user = userService.getUserById(id);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Invalid session"));
-        }
-
-        userService.changePassword(id, request.getNewPassword());
-        return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Password changed"));
-    }
 }
