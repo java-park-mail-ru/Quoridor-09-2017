@@ -1,158 +1,132 @@
 package application.game;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GameLogic {
-    private Field field;
-    private int playerCount;
-    private int playerNumber;
-    private Point newLocation = null;
+    private int dimension;
+    private List<Player> players = new ArrayList<>(2);
+    private int playerNumber = 0;
 
-    public GameLogic(int xSize, int ySize, int playerCount) {
-        this.playerCount = playerCount;
-        playerNumber = 0;
-        field = new Field(xSize, ySize, playerCount);
+    private int nextPlayerNumber() {
+        return (playerNumber + 1) % 2;
     }
 
-    /*
-     * if wall == null, then player are mooving
-     * direction:
-     *      0 - forward;
-     *      1 - back;
-     *      2 - right;
-     *      3 - left
-     * return:
-     *      "Ok", if all operations are valid;
-     *      "Victory", if a player wins
-     */
-    public String iterationOfGame(int direction, Wall wall) {
-        if (wall != null) {
-            if (canAddWall(wall)) {
-                field.addWall(wall);
-                return "Ok";
-            } else {
-                return "Can't add wall: some of cells are occupied";
+    public GameLogic(int dimension) {
+        this.dimension = dimension;
+        players.add(new Player(dimension));
+        players.add(new Player(dimension));
+    }
+
+    public String iterationOfGame(Point ... points) {
+        for (Point point: points) {
+            if (!checkCoordinate(point)) {
+                return "Incorrect coordinates";
             }
-        } else {
-            final Point oldLocation = field.getPlayers().get(playerNumber % playerCount).getLocation();
-            String errorMessage = null;
-            switch (direction) {
-                case 0:
-                    errorMessage = moveForward(oldLocation);
-                    break;
-                case 1:
-                    errorMessage = moveBack(oldLocation);
-                    break;
+        }
+        final Player curPlayer = players.get(playerNumber);
+        final Player enemyPlayer = players.get(nextPlayerNumber());
+        String resultMessage = "Ok";
+        switch (points.length) {
+            case 1:
+                if (!canMove(points[0])) {
+                    return "Can't go to this point";
+                }
+                curPlayer.getField().clearCell(curPlayer.getLocation());
+                curPlayer.setLocation(points[0]);
+                if (curPlayer.haveWon()) {
+                    return "Player number " + playerNumber + " have won!";
+                }
+                curPlayer.getField().occupyCellByPlayer(points[0], 'M');
+                enemyPlayer.getField().clearCell(recountCoordinates(curPlayer.getLocation()));
+                enemyPlayer.getField().occupyCellByPlayer(recountCoordinates(points[0]), 'E');
+                break;
+            case 2:
+                final Wall myWall = buildWall(points[0], points[1]);
+                if (myWall == null) {
+                    return "Can't add wall";
+                }
+                players.get(playerNumber).getField().addWall(myWall);
+                final Wall enemyWall = buildWall(recountCoordinates(points[0]), recountCoordinates(points[1]));
+                players.get(nextPlayerNumber()).getField().addWall(enemyWall);
+                break;
+            default:
+                resultMessage = "Wrong number of points";
+        }
+        playerNumber = nextPlayerNumber();
+        return resultMessage;
+    }
+
+    private Point recountCoordinates(Point point) {
+        return new Point(2 * (dimension - 1) - point.getxCoordinate(),
+                2 * (dimension - 1) - point.getyCoordinate());
+    }
+
+    @SuppressWarnings({"OverlyComplexBooleanExpression", "OverlyComplexMethod"})
+    private boolean canMove(Point point) {
+        final Field field = players.get(playerNumber).getField();
+        if (field.getCellStatus(point) != 'F') {
+            return false;
+        }
+        final Point curLocation = players.get(playerNumber).getLocation();
+        //Проверка на то, движется ли игрок только по горизонтали или только по вертикали
+        if ((point.getxCoordinate() - curLocation.getxCoordinate()) == 0 ^
+                (point.getyCoordinate() - curLocation.getyCoordinate()) == 0) {
+            final Point middle = new Point((point.getxCoordinate() + curLocation.getxCoordinate()) / 2,
+                    (point.getyCoordinate() + curLocation.getyCoordinate()) / 2);
+            switch (Math.abs(point.getxCoordinate() - curLocation.getxCoordinate())) {
                 case 2:
-                    errorMessage = moveRight(oldLocation);
-                    break;
-                case 3:
-                    errorMessage = moveLeft(oldLocation);
-                    break;
+                    return field.getCellStatus(middle) == 'F';
+                case 4:
+                    return (field.getCellStatus(middle) == 'E' &&
+                            field.getCellStatus(new Point(middle.getxCoordinate() - 1, middle.getyCoordinate())) == 'F' &&
+                            field.getCellStatus(new Point(middle.getxCoordinate() + 1, middle.getyCoordinate())) == 'F');
                 default:
             }
-            if (!Objects.equals(errorMessage, "Ok")) {
-                field.getPlayers().get(playerNumber % playerCount).setLocation(oldLocation);
-                return errorMessage;
+            switch (Math.abs(point.getyCoordinate() - curLocation.getyCoordinate())) {
+                case 2:
+                    return field.getCellStatus(middle) == 'F';
+                case 4:
+                    return (field.getCellStatus(middle) == 'E' &&
+                            field.getCellStatus(new Point(middle.getxCoordinate(), middle.getyCoordinate() - 1)) == 'F' &&
+                            field.getCellStatus(new Point(middle.getxCoordinate(), middle.getyCoordinate() + 1)) == 'F');
+                default:
             }
-            field.clearCell(oldLocation);
-            field.occupyCellByPlayer(newLocation);
-            playerNumber++;
-            return (field.isPlayerOnTheFinish(playerNumber % playerCount) ? "Victory" : "Ok");
+        } else {
+            return false;
         }
+        return false;
+    }
+
+    @SuppressWarnings("OverlyComplexBooleanExpression")
+    private boolean checkCoordinate(Point point) {
+        return (point.getxCoordinate() > 0 && point.getxCoordinate() < (dimension * 2 - 1) &&
+        point.getyCoordinate() > 0 && point.getyCoordinate() < (dimension * 2 - 1));
+    }
+
+    //точки в списке могут храниться не по порядку, но это не важно
+    //begin - верхняя или левая
+    //end - нижняя или правая
+    private Wall buildWall(Point begin, Point end) {
+        if (begin.getxCoordinate() == end.getxCoordinate() &&
+                Math.abs(begin.getyCoordinate() - end.getyCoordinate()) == 2) {
+            final Wall wall = new Wall(begin, new Point(begin.getxCoordinate(), begin.getyCoordinate() - 1), end);
+            return (canAddWall(wall) ? wall : null);
+        }
+        if (begin.getyCoordinate() == end.getyCoordinate() &&
+                Math.abs(end.getxCoordinate() - begin.getxCoordinate()) == 2) {
+            final Wall wall = new Wall(begin, new Point(end.getxCoordinate() - 1, end.getyCoordinate()), end);
+            return (canAddWall(wall) ? wall : null);
+        }
+        return null;
     }
 
     private boolean canAddWall(Wall wall) {
         for (Point point : wall.getLocation()) {
-            if (field.getCellStatus(point) != 'F') {
+            if (players.get(playerNumber).getField().getCellStatus(point) != 'F') {
                 return false;
             }
         }
         return true;
-    }
-
-    private String moveOnSituation(int curPlayer, Point oldLocation,
-                                   int xNeighbor, int yNeighbor,
-                                   int xDifference, int yDifference) {
-        final char nearCellStatus = field.getCellStatus(new Point(oldLocation.getxCoordinate() + xNeighbor,
-                oldLocation.getyCoordinate() + yNeighbor));
-        if (nearCellStatus == 'F') {
-            field.getPlayers().get(curPlayer).changeLocation(xDifference, yDifference);
-            newLocation = field.getPlayers().get(curPlayer).getLocation();
-            return "Ok";
-        } else if (nearCellStatus == 'W') {
-            return "Can't move a player: there is a wall";
-        }
-        if (field.getCellStatus(new Point(oldLocation.getxCoordinate() + xNeighbor * 2,
-                oldLocation.getyCoordinate() + yNeighbor * 2)) == 'P') {
-            field.getPlayers().get(curPlayer).changeLocation(xDifference * 2, yDifference * 2);
-            newLocation = field.getPlayers().get(curPlayer).getLocation();
-            return "Ok";
-        }
-        return "Unknown error";
-    }
-
-    private String moveForward(Point oldLocation) {
-        final int curPlayer = playerNumber % playerCount;
-        switch (curPlayer) {
-            case 0:
-                return moveOnSituation(curPlayer, oldLocation, 0, 1, 0, 2);
-            case 1:
-                return moveOnSituation(curPlayer, oldLocation, 0, -1, 0, -2);
-            case 2:
-                return moveOnSituation(curPlayer, oldLocation, 1, 0, 2, 0);
-            case 3:
-                return moveOnSituation(curPlayer, oldLocation, -1, 0, -2, 0);
-            default:
-                return "Unknown error";
-        }
-    }
-
-    private String moveBack(Point oldLocation) {
-        final int curPlayer = playerNumber % playerCount;
-        switch (curPlayer) {
-            case 0:
-                return moveOnSituation(curPlayer, oldLocation, 0, -1, 0, -2);
-            case 1:
-                return moveOnSituation(curPlayer, oldLocation, 0, 1, 0, 2);
-            case 2:
-                return moveOnSituation(curPlayer, oldLocation, -1, 0, -2, 0);
-            case 3:
-                return moveOnSituation(curPlayer, oldLocation, 1, 0, 2, 0);
-            default:
-                return "Unknown error";
-        }
-    }
-
-    private String moveRight(Point oldLocation) {
-        final int curPlayer = playerNumber % playerCount;
-        switch (curPlayer) {
-            case 0:
-                moveOnSituation(curPlayer, oldLocation, 1, 0, 2, 0);
-            case 1:
-                moveOnSituation(curPlayer, oldLocation, -1, 0, -2, 0);
-            case 2:
-                moveOnSituation(curPlayer, oldLocation, 0, -1, 0, -2);
-            case 3:
-                moveOnSituation(curPlayer, oldLocation, 0, 1, 0, 2);
-            default:
-                return "Unknown error";
-        }
-    }
-
-    private String moveLeft(Point oldLocation) {
-        final int curPlayer = playerNumber % playerCount;
-        switch (curPlayer) {
-            case 0:
-                moveOnSituation(curPlayer, oldLocation, -1, 0, -2, 0);
-            case 1:
-                moveOnSituation(curPlayer, oldLocation, 1, 0, 2, 0);
-            case 2:
-                moveOnSituation(curPlayer, oldLocation, 0, 1, 0, 2);
-            case 3:
-                moveOnSituation(curPlayer, oldLocation, 0, -1, 0, -2);
-            default:
-                return "Unknown error";
-        }
     }
 }

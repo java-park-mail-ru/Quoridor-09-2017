@@ -2,14 +2,13 @@ package application.game;
 
 public class Player {
     private Point location;
+    private int dimension;
+    private Field field;
 
-    public Player(Point point) {
-        this.location = point;
-    }
-
-    public void changeLocation(int xDifference, int yDifference) {
-        location.setxCoordinate(location.getxCoordinate() + xDifference);
-        location.setyCoordinate(location.getyCoordinate() + yDifference);
+    public Player(int dimension) {
+        location = new Point(0, dimension - 1);
+        this.dimension = dimension;
+        field = new Field(dimension);
     }
 
     public Point getLocation() {
@@ -18,5 +17,13 @@ public class Player {
 
     public void setLocation(Point location) {
         this.location = location;
+    }
+
+    public Field getField() {
+        return field;
+    }
+
+    public boolean haveWon() {
+        return (location.getxCoordinate() == (dimension * 2 - 2));
     }
 }
