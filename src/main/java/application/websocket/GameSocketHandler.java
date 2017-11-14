@@ -1,7 +1,7 @@
 package application.websocket;
 
-import application.User;
-import application.UserService;
+import application.dao.UserService;
+import application.game.messages.InfoMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ import javax.validation.constraints.NotNull;
 import java.io.IOException;
 
 public class GameSocketHandler extends TextWebSocketHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger("application");
+    private static final Logger LOGGER = LoggerFactory.getLogger(GameSocketHandler.class);
     private static final CloseStatus ACCESS_DENIED = new CloseStatus(4500, "Not logged in. Access denied");
 
     @NotNull
@@ -55,8 +55,7 @@ public class GameSocketHandler extends TextWebSocketHandler {
             return;
         }
         final Long userId = (Long) webSocketSession.getAttributes().get("userId");
-        User user;
-        if (userId == null || (user = userService.getUserById(userId)) == null) {
+        if (userId == null || (userService.getUserById(userId)) == null) {
             closeSessionSilently(webSocketSession, ACCESS_DENIED);
             return;
         }
@@ -70,26 +69,28 @@ public class GameSocketHandler extends TextWebSocketHandler {
             message = objectMapper.readValue(textMessage.getPayload(), Message.class);
         } catch (IOException e) {
             LOGGER.error("Wrong json format at websocket message ", e);
-
-            //обработать случай, когда получили некорректное сообщение
-            //отправить сообщение, чтобы игрок повторил ввод
-
+            try {
+                gameSocketService.sendMessageToUser(userId, new InfoMessage("repeat"));
+            } catch (IOException ex) {
+                gameSocketService.closeConnection(userId, CloseStatus.SERVER_ERROR);
+            }
             return;
         }
         try {
             messageHandlerContainer.handle(message, userId);
         } catch (HandleExeption e) {
             LOGGER.error("Can't handle message of type " + message.getClass().getName() + " with content: " + textMessage, e);
-
-            //обработать случай, когда получили некорректное сообщение
-            //отправить сообщение, чтобы игрок повторил ввод
-
+            try {
+                gameSocketService.sendMessageToUser(userId, new InfoMessage("repeat"));
+            } catch (IOException ex) {
+                gameSocketService.closeConnection(userId, CloseStatus.SERVER_ERROR);
+            }
         }
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession webSocketSession, CloseStatus closeStatus) {
-        final Long userId = (Long)webSocketSession.getAttributes().get("userId");
+        final Long userId = (Long) webSocketSession.getAttributes().get("userId");
         if (userId == null) {
             LOGGER.warn("User is disconnected but his session was not found (closeStatus = " + closeStatus + ')');
             return;
@@ -103,7 +104,12 @@ public class GameSocketHandler extends TextWebSocketHandler {
     }
 
     private void closeSessionSilently(WebSocketSession webSocketSession, CloseStatus closeStatus) {
-        final CloseStatus status = (closeStatus == null ? CloseStatus.SERVER_ERROR : closeStatus);
+        final CloseStatus status;
+        if (closeStatus == null) {
+            status = CloseStatus.SERVER_ERROR;
+        } else {
+            status = closeStatus;
+        }
         try {
             webSocketSession.close(status);
         } catch (IOException e) {

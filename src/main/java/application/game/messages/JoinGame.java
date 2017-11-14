@@ -1,4 +1,4 @@
-package application.game.models;
+package application.game.messages;
 
 import application.websocket.Message;
 

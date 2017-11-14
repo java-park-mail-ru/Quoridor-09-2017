@@ -1,11 +1,11 @@
-package application.game;
+package application.game.logic;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Field {
-    private int xSize;
-    private int ySize;
+    private int firstSize;
+    private int secondSize;
 
     /*
      * Values: F(free) - cell is not occupied,
@@ -20,9 +20,9 @@ public class Field {
     private List<Wall> walls = new ArrayList<>();
 
     private void initializeField() {
-        for (int i = 0; i < xSize; i++) {
+        for (int i = 0; i < firstSize; i++) {
             final List<Character> line = new ArrayList<>();
-            for (int j = 0; j < ySize; j++) {
+            for (int j = 0; j < secondSize; j++) {
                 line.add('F');
             }
             field.add(line);
@@ -30,30 +30,30 @@ public class Field {
     }
 
     public Field(int dimension) {
-        this.xSize = dimension * 2 - 1;
-        this.ySize = dimension * 2 - 1;
+        this.firstSize = dimension * 2 - 1;
+        this.secondSize = dimension * 2 - 1;
         initializeField();
 
-        field.get(0).set(ySize / 2, 'M');
-        field.get(xSize - 1).set(ySize / 2, 'E');
+        field.get(0).set(secondSize / 2, 'M');
+        field.get(firstSize - 1).set(secondSize / 2, 'E');
     }
 
     public char getCellStatus(Point point) {
-        return field.get(point.getxCoordinate()).get(point.getyCoordinate());
+        return field.get(point.getFirstCoordinate()).get(point.getSecondCoordinate());
     }
 
     public void clearCell(Point point) {
-        field.get(point.getxCoordinate()).set(point.getyCoordinate(), 'F');
+        field.get(point.getFirstCoordinate()).set(point.getSecondCoordinate(), 'F');
     }
 
     public void addWall(Wall wall) {
         walls.add(wall);
         for (Point point : wall.getLocation()) {
-            field.get(point.getxCoordinate()).set(point.getyCoordinate(), 'W');
+            field.get(point.getFirstCoordinate()).set(point.getSecondCoordinate(), 'W');
         }
     }
 
     public void occupyCellByPlayer(Point point, char playerIdentifier) {
-        field.get(point.getxCoordinate()).set(point.getyCoordinate(), playerIdentifier);
+        field.get(point.getFirstCoordinate()).set(point.getSecondCoordinate(), playerIdentifier);
     }
 }

@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class GameSocketService {
-    private static final Logger LOGGER = LoggerFactory.getLogger("application");
+    private static final Logger LOGGER = LoggerFactory.getLogger(GameSocketService.class);
     private Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper;
 

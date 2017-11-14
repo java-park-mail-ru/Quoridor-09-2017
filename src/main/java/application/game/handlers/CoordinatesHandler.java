@@ -1,7 +1,7 @@
 package application.game.handlers;
 
 import application.game.GameService;
-import application.game.models.Coordinates;
+import application.game.messages.Coordinates;
 import application.websocket.MessageHandler;
 import application.websocket.MessageHandlerContainer;
 import org.springframework.stereotype.Component;
@@ -30,7 +30,7 @@ public class CoordinatesHandler extends MessageHandler<Coordinates> {
     }
 
     @Override
-    public void handle(@NotNull Coordinates message, @NotNull Long userId){
+    public void handle(@NotNull Coordinates message, @NotNull Long userId) {
         gameService.addPoints(userId, message);
     }
 }

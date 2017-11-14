@@ -10,7 +10,7 @@ public abstract class MessageHandler<T extends Message> {
         this.myClass = myClass;
     }
 
-    public void handleMessage(@NotNull Message message, @NotNull Long userId) throws HandleExeption{
+    public void handleMessage(@NotNull Message message, @NotNull Long userId) throws HandleExeption {
         try {
             handle(myClass.cast(message), userId);
         } catch (ClassCastException ex) {

@@ -11,8 +11,8 @@ import java.util.Map;
 @Service
 public class GameMessageHandlerContainer implements MessageHandlerContainer {
     @NotNull
-    private static final Logger LOGGER = LoggerFactory.getLogger("application");
-    final Map<Class<?>, MessageHandler<?>> handlerMap = new HashMap<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(GameMessageHandlerContainer.class);
+    private final Map<Class<?>, MessageHandler<?>> handlerMap = new HashMap<>();
 
     @Override
     public void handle(@NotNull Message message, @NotNull Long userId) throws HandleExeption {

@@ -1,4 +1,4 @@
-package application.game;
+package application.game.logic;
 
 import java.util.ArrayList;
 import java.util.List;

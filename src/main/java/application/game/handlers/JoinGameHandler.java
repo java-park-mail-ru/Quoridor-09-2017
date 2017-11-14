@@ -1,7 +1,7 @@
 package application.game.handlers;
 
 import application.game.GameService;
-import application.game.models.JoinGame;
+import application.game.messages.JoinGame;
 import application.websocket.MessageHandler;
 import application.websocket.MessageHandlerContainer;
 import org.springframework.stereotype.Component;

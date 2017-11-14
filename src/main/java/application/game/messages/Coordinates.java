@@ -1,6 +1,6 @@
-package application.game.models;
+package application.game.messages;
 
-import application.game.Point;
+import application.game.logic.Point;
 import application.websocket.HandleExeption;
 import application.websocket.Message;
 
@@ -9,8 +9,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 public class Coordinates extends Message {
     private String coordinates;
+
+    public Coordinates(List<Point> points) {
+        setCoordinatesOfPoints(points);
+    }
 
     public void setCoordinatesOfPoints(List<Point> points) {
         final StringBuilder stringBuilder = new StringBuilder();

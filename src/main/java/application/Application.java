@@ -10,7 +10,6 @@ import org.springframework.web.socket.handler.PerConnectionWebSocketHandler;
 @SpringBootApplication
 public class Application {
     public static void main(String[] args) {
-//        SpringApplication.run(Application.class, args);
         SpringApplication.run(new Class[]{WebSocketConfig.class, Application.class}, args);
     }
 
