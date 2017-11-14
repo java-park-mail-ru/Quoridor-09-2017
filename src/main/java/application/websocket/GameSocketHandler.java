@@ -10,21 +10,31 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 
 public class GameSocketHandler extends TextWebSocketHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger("application");
     private static final CloseStatus ACCESS_DENIED = new CloseStatus(4500, "Not logged in. Access denied");
 
+    @NotNull
     private final UserService userService;
+
+    @NotNull
     private final GameSocketService gameSocketService;
+
+    @NotNull
+    private final MessageHandlerContainer messageHandlerContainer;
+
     private final ObjectMapper objectMapper;
 
     public GameSocketHandler(UserService userService,
                              GameSocketService gameSocketService,
+                             MessageHandlerContainer messageHandlerContainer,
                              ObjectMapper objectMapper) {
         this.userService = userService;
         this.gameSocketService = gameSocketService;
+        this.messageHandlerContainer = messageHandlerContainer;
         this.objectMapper = objectMapper;
     }
 
@@ -50,11 +60,11 @@ public class GameSocketHandler extends TextWebSocketHandler {
             closeSessionSilently(webSocketSession, ACCESS_DENIED);
             return;
         }
-        collectMessage(user, message);
+        collectMessage(userId, message);
     }
 
     @SuppressWarnings("OverlyBroadCatchBlock")
-    private void collectMessage(User user, TextMessage textMessage) {
+    private void collectMessage(Long userId, TextMessage textMessage) {
         final Message message;
         try {
             message = objectMapper.readValue(textMessage.getPayload(), Message.class);
@@ -62,12 +72,19 @@ public class GameSocketHandler extends TextWebSocketHandler {
             LOGGER.error("Wrong json format at websocket message ", e);
 
             //обработать случай, когда получили некорректное сообщение
+            //отправить сообщение, чтобы игрок повторил ввод
 
             return;
         }
+        try {
+            messageHandlerContainer.handle(message, userId);
+        } catch (HandleExeption e) {
+            LOGGER.error("Can't handle message of type " + message.getClass().getName() + " with content: " + textMessage, e);
 
-        //обработка сообщения
+            //обработать случай, когда получили некорректное сообщение
+            //отправить сообщение, чтобы игрок повторил ввод
 
+        }
     }
 
     @Override

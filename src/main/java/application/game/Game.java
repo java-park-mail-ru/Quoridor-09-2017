@@ -3,7 +3,7 @@ package application.game;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GameLogic {
+public class Game {
     private int dimension;
     private List<Player> players = new ArrayList<>(2);
     private int playerNumber = 0;
@@ -12,7 +12,7 @@ public class GameLogic {
         return (playerNumber + 1) % 2;
     }
 
-    public GameLogic(int dimension) {
+    public Game(int dimension) {
         this.dimension = dimension;
         players.add(new Player(dimension));
         players.add(new Player(dimension));
