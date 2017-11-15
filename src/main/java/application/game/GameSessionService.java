@@ -32,6 +32,10 @@ public class GameSessionService {
         return gameSessions.containsKey(userId);
     }
 
+    public Map<Long, GameSession> getGameSessions() {
+        return gameSessions;
+    }
+
     public Set<GameSession> getSessions() {
         final Set<GameSession> result = new HashSet<>();
         result.addAll(gameSessions.values());
@@ -80,15 +84,16 @@ public class GameSessionService {
     }
 
     public void finishGame(@NotNull GameSession gameSession) {
+        final FinishGame finishGameMessage = new FinishGame();
         try {
-            gameSocketService.sendMessageToUser(gameSession.getFirstUserId(),
-                    new FinishGame(gameSession.getFirstResult()));
+            finishGameMessage.setWon(gameSession.getFirstResult());
+            gameSocketService.sendMessageToUser(gameSession.getFirstUserId(), finishGameMessage);
         } catch (IOException e) {
             LOGGER.warn("Failed to send FinishGameMessage to user " + gameSession.getFirstUserId(), e);
         }
         try {
-            gameSocketService.sendMessageToUser(gameSession.getSecondUserId(),
-                    new FinishGame(gameSession.getSecondResult()));
+            finishGameMessage.setWon(gameSession.getSecondResult());
+            gameSocketService.sendMessageToUser(gameSession.getSecondUserId(), finishGameMessage);
         } catch (IOException e) {
             LOGGER.warn("Failed to send FinishGameMessage to user " + gameSession.getSecondUserId(), e);
         }
@@ -125,11 +130,13 @@ public class GameSessionService {
         if (session.isFinished()) {
             return null;
         }
+        final InfoMessage infoMessage = new InfoMessage();
         if (!Objects.equals(session.getWaiter(), userId)) {
             final List<Point> resultPoints = session.getGame().iterationOfGame(points);
             if (resultPoints == null) {
                 try {
-                    gameSocketService.sendMessageToUser(userId, new InfoMessage("repeat " + session.getGame().getError()));
+                    infoMessage.setMessage("repeat " + session.getGame().getError());
+                    gameSocketService.sendMessageToUser(userId, infoMessage);
                 } catch (IOException e) {
                     LOGGER.warn("Failed to send RepeatGameMessage to user " + userId, e);
                 }
@@ -139,7 +146,8 @@ public class GameSessionService {
             }
         } else {
             try {
-                gameSocketService.sendMessageToUser(userId, new InfoMessage("wait"));
+                infoMessage.setMessage("wait");
+                gameSocketService.sendMessageToUser(userId, infoMessage);
             } catch (IOException e) {
                 LOGGER.warn("Failed to send WaitGameMessage to user " + userId, e);
             }

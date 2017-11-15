@@ -13,20 +13,16 @@ import java.util.stream.Collectors;
 public class Coordinates extends Message {
     private String coordinates;
 
-    public Coordinates(List<Point> points) {
-        setCoordinatesOfPoints(points);
-    }
-
-    public void setCoordinatesOfPoints(List<Point> points) {
+    public void fromListToString(List<Point> points) {
         final StringBuilder stringBuilder = new StringBuilder();
         for (Point point : points) {
             stringBuilder.append(point.getFirstCoordinate()).append(' ')
                     .append(point.getSecondCoordinate()).append(' ');
         }
-        this.coordinates = stringBuilder.toString();
+        this.coordinates = stringBuilder.toString().trim();
     }
 
-    public List<Point> getPointsOfCoordinates() throws HandleExeption {
+    public List<Point> fromStringToList() throws HandleExeption {
         final List<Point> result = new ArrayList<>();
         try {
             final List<Integer> numbers = Arrays.stream(coordinates.trim().split(" "))

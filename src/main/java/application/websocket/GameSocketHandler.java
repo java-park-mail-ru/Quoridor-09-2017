@@ -64,13 +64,15 @@ public class GameSocketHandler extends TextWebSocketHandler {
 
     @SuppressWarnings("OverlyBroadCatchBlock")
     private void collectMessage(Long userId, TextMessage textMessage) {
+        final InfoMessage infoMessage = new InfoMessage();
+        infoMessage.setMessage("repeat");
         final Message message;
         try {
             message = objectMapper.readValue(textMessage.getPayload(), Message.class);
         } catch (IOException e) {
             LOGGER.error("Wrong json format at websocket message ", e);
             try {
-                gameSocketService.sendMessageToUser(userId, new InfoMessage("repeat"));
+                gameSocketService.sendMessageToUser(userId, infoMessage);
             } catch (IOException ex) {
                 gameSocketService.closeConnection(userId, CloseStatus.SERVER_ERROR);
             }
@@ -81,7 +83,7 @@ public class GameSocketHandler extends TextWebSocketHandler {
         } catch (HandleExeption e) {
             LOGGER.error("Can't handle message of type " + message.getClass().getName() + " with content: " + textMessage, e);
             try {
-                gameSocketService.sendMessageToUser(userId, new InfoMessage("repeat"));
+                gameSocketService.sendMessageToUser(userId, infoMessage);
             } catch (IOException ex) {
                 gameSocketService.closeConnection(userId, CloseStatus.SERVER_ERROR);
             }

@@ -6,10 +6,6 @@ import application.websocket.Message;
 public class FinishGame extends Message {
     private Boolean isWon;
 
-    public FinishGame(Boolean isWon) {
-        this.isWon = isWon;
-    }
-
     public Boolean getWon() {
         return isWon;
     }

@@ -60,10 +60,12 @@ public class GameService {
         }
         final List<Point> points;
         try {
-            points = coordinates.getPointsOfCoordinates();
+            points = coordinates.fromStringToList();
         } catch (HandleExeption e) {
             try {
-                gameSocketService.sendMessageToUser(userId, new InfoMessage("repeat"));
+                final InfoMessage infoMessage = new InfoMessage();
+                infoMessage.setMessage("repeat");
+                gameSocketService.sendMessageToUser(userId, infoMessage);
             } catch (IOException ex) {
                 LOGGER.warn("Failed to send RepeatGameMessage to user " + userId, e, ex);
             }
@@ -73,7 +75,7 @@ public class GameService {
         gameStep();
     }
 
-    public void tryStartGame() {
+    private void tryStartGame() {
         final Set<Long> matchedPlayers = new LinkedHashSet<>();
         while (waiters.size() >= 2 || waiters.size() >= 1 && matchedPlayers.size() >= 1) {
             final Long candidate = waiters.poll();
@@ -95,7 +97,16 @@ public class GameService {
                 && userService.getUserById(candidate) != null;
     }
 
-    private void gameStep() {
+    //method for tests
+    @SuppressWarnings("EmptyCatchBlock")
+    public void putCoordinates(@NotNull Long userId, @NotNull Coordinates coordinates) {
+        try {
+            tasks.put(userId, coordinates.fromStringToList());
+        } catch (HandleExeption handleExeption) {
+        }
+    }
+
+    public Map<Long, List<Point>> gameStep() {
         final Map<Long, List<Point>> messagesToSend = new HashMap<>();
         final Set<Long> users = tasks.keySet();
         for (Long curUser : users) {
@@ -118,13 +129,17 @@ public class GameService {
             }
         }
 
+        final Coordinates coordinates = new Coordinates();
         for (Map.Entry<Long, List<Point>> message : messagesToSend.entrySet()) {
             try {
-                gameSocketService.sendMessageToUser(message.getKey(), new Coordinates(message.getValue()));
+                coordinates.fromListToString(message.getValue());
+                gameSocketService.sendMessageToUser(message.getKey(), coordinates);
             } catch (IOException e) {
                 try {
+                    final InfoMessage infoMessage = new InfoMessage();
+                    infoMessage.setMessage("repeat");
                     gameSocketService.sendMessageToUser(gameSessionService.getGameSession(message.getKey())
-                            .getAnotherPlayer(message.getKey()), new InfoMessage("repeat"));
+                            .getAnotherPlayer(message.getKey()), infoMessage);
                 } catch (IOException ex) {
                     sessionsToTerminate.add(gameSessionService.getGameSession(message.getKey()));
                     LOGGER.error("Can't send data to user ", e, ex);
@@ -134,5 +149,7 @@ public class GameService {
 
         sessionsToTerminate.forEach(session -> gameSessionService.forceTerminate(session, true));
         sessionsToFinish.forEach(session -> gameSessionService.forceTerminate(session, false));
+
+        return messagesToSend;
     }
 }
