@@ -98,11 +98,11 @@ public class GameService {
     }
 
     //method for tests
-    @SuppressWarnings("EmptyCatchBlock")
     public void putCoordinates(@NotNull Long userId, @NotNull Coordinates coordinates) {
         try {
             tasks.put(userId, coordinates.fromStringToList());
-        } catch (HandleExeption handleExeption) {
+        } catch (HandleExeption ignored) {
+            LOGGER.error(ignored.getMessage());
         }
     }
 
