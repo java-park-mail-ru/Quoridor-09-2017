@@ -1,4 +1,4 @@
-package application;
+package application.dao;
 
 @SuppressWarnings("unused")
 public class User {
