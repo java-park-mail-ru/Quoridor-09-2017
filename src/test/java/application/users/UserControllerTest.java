@@ -1,4 +1,4 @@
-package application;
+package application.users;
 
 import application.dao.UserService;
 import org.junit.After;

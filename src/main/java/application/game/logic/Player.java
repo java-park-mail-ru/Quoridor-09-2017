@@ -30,6 +30,6 @@ public class Player {
     }
 
     public boolean haveWon() {
-        return (location.getxCoordinate() == (dimension * 2 - 2));
+        return (location.getFirstCoordinate() == (dimension * 2 - 2));
     }
 }

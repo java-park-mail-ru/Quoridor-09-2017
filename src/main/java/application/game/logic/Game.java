@@ -18,6 +18,10 @@ public class Game {
         return (playerNumber + 1) % 2;
     }
 
+    public void goToNextPlayerNumber() {
+        playerNumber = nextPlayerNumber();
+    }
+
     public boolean isFinished() {
         return isFinished;
     }
@@ -30,6 +34,14 @@ public class Game {
         return winer;
     }
 
+    public List<Player> getPlayers() {
+        return players;
+    }
+
+    public int getPlayerNumber() {
+        return playerNumber;
+    }
+
     public Game(int dimension, Long userId1, Long userId2) {
         this.dimension = dimension;
         players.add(new Player(dimension, userId1));
@@ -38,6 +50,10 @@ public class Game {
 
     @SuppressWarnings("ConstantConditions")
     public List<Point> iterationOfGame(List<Point> points) {
+        if (points == null) {
+            error = "Null is comming as parametr";
+            return null;
+        }
         error = null;
         for (Point point: points) {
             if (!checkCoordinate(point)) {
@@ -54,8 +70,11 @@ public class Game {
                     error = "Can't go to this point";
                     return null;
                 }
-                curPlayer.getField().clearCell(curPlayer.getLocation());
+
+                final Point oldLocation = curPlayer.getLocation();
+                curPlayer.getField().clearCell(oldLocation);
                 curPlayer.setLocation(points.get(0));
+
                 if (curPlayer.haveWon()) {
                     isFinished = true;
                     winer = curPlayer.getUserId();
@@ -63,20 +82,20 @@ public class Game {
                 }
                 curPlayer.getField().occupyCellByPlayer(points.get(0), 'M');
 
-                enemyPlayer.getField().clearCell(recountCoordinates(curPlayer.getLocation()));
+                enemyPlayer.getField().clearCell(recountCoordinates(oldLocation));
                 enemyPlayer.getField().occupyCellByPlayer(recountCoordinates(points.get(0)), 'E');
 
                 result.add(recountCoordinates(points.get(0)));
                 break;
             case 2:
-                final Wall myWall = buildWall(points.get(0), points.get(1));
+                final Wall myWall = buildWall(points.get(0), points.get(1), playerNumber);
                 if (myWall == null) {
                     error = "Can't add wall";
                     return null;
                 }
                 players.get(playerNumber).getField().addWall(myWall);
 
-                final Wall enemyWall = buildWall(recountCoordinates(points.get(0)), recountCoordinates(points.get(1)));
+                final Wall enemyWall = buildWall(recountCoordinates(points.get(1)), recountCoordinates(points.get(0)), nextPlayerNumber());
                 players.get(nextPlayerNumber()).getField().addWall(enemyWall);
 
                 result.add(enemyWall.getLocation().get(0));
@@ -86,7 +105,7 @@ public class Game {
                 error = "Wrong number of points";
                 return null;
         }
-        playerNumber = nextPlayerNumber();
+        goToNextPlayerNumber();
         return result;
     }
 
@@ -133,17 +152,17 @@ public class Game {
 
     @SuppressWarnings("OverlyComplexBooleanExpression")
     private boolean checkCoordinate(Point point) {
-        return (point.getFirstCoordinate() > 0 && point.getFirstCoordinate() < (dimension * 2 - 1)
-                && point.getSecondCoordinate() > 0 && point.getSecondCoordinate() < (dimension * 2 - 1));
+        return (point.getFirstCoordinate() >= 0 && point.getFirstCoordinate() < (dimension * 2 - 1)
+                && point.getSecondCoordinate() >= 0 && point.getSecondCoordinate() < (dimension * 2 - 1));
     }
 
     //begin - верхняя или левая
     //end - нижняя или правая
-    private Wall buildWall(Point begin, Point end) {
+    private Wall buildWall(Point begin, Point end, int player) {
         if (begin.getFirstCoordinate() == end.getFirstCoordinate()
                 && Math.abs(begin.getSecondCoordinate() - end.getSecondCoordinate()) == 2) {
             final Wall wall = new Wall(begin, new Point(begin.getFirstCoordinate(), begin.getSecondCoordinate() - 1), end);
-            if (canAddWall(wall)) {
+            if (canAddWall(wall, player)) {
                 return wall;
             } else {
                 return null;
@@ -152,7 +171,7 @@ public class Game {
         if (begin.getSecondCoordinate() == end.getSecondCoordinate()
                 && Math.abs(end.getFirstCoordinate() - begin.getFirstCoordinate()) == 2) {
             final Wall wall = new Wall(begin, new Point(end.getFirstCoordinate() - 1, end.getSecondCoordinate()), end);
-            if (canAddWall(wall)) {
+            if (canAddWall(wall, player)) {
                 return wall;
             } else {
                 return null;
@@ -161,12 +180,16 @@ public class Game {
         return null;
     }
 
-    private boolean canAddWall(Wall wall) {
+    @SuppressWarnings("OverlyComplexBooleanExpression")
+    private boolean canAddWall(Wall wall, int player) {
         for (Point point : wall.getLocation()) {
-            if (players.get(playerNumber).getField().getCellStatus(point) != 'F') {
+            if (players.get(player).getField().getCellStatus(point) != 'F') {
                 return false;
             }
         }
-        return true;
+        return (wall.getLocation().get(0).getFirstCoordinate() != wall.getLocation().get(1).getFirstCoordinate()
+                || wall.getLocation().get(0).getFirstCoordinate() % 2 != 0)
+                && (wall.getLocation().get(0).getSecondCoordinate() != wall.getLocation().get(1).getSecondCoordinate()
+                || wall.getLocation().get(0).getSecondCoordinate() % 2 != 0);
     }
 }

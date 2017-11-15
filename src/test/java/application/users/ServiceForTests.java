@@ -1,4 +1,4 @@
-package application;
+package application.users;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,7 +12,7 @@ class ServiceForTests {
     private final JdbcTemplate template;
 
     @Autowired
-    public ServiceForTests(JdbcTemplate template) {
+    ServiceForTests(JdbcTemplate template) {
         this.template = template;
     }
 

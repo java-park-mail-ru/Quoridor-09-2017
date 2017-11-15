@@ -20,8 +20,8 @@ public class Coordinates extends Message {
     public void setCoordinatesOfPoints(List<Point> points) {
         final StringBuilder stringBuilder = new StringBuilder();
         for (Point point : points) {
-            stringBuilder.append(point.getxCoordinate()).append(' ')
-                    .append(point.getyCoordinate()).append(' ');
+            stringBuilder.append(point.getFirstCoordinate()).append(' ')
+                    .append(point.getSecondCoordinate()).append(' ');
         }
         this.coordinates = stringBuilder.toString();
     }
