@@ -97,8 +97,8 @@ public class GameService {
                 && userService.getUserById(candidate) != null;
     }
 
-    //method for tests
-    public void putCoordinates(@NotNull Long userId, @NotNull Coordinates coordinates) {
+    //visible for testing
+    void putCoordinates(@NotNull Long userId, @NotNull Coordinates coordinates) {
         try {
             tasks.put(userId, coordinates.fromStringToList());
         } catch (HandleExeption ignored) {

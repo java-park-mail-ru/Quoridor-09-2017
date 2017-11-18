@@ -1,7 +1,6 @@
 package application.users;
 
 import application.dao.UserService;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,16 +29,12 @@ public class UserControllerTest {
     UserService userService;
 
     @Autowired
-    ServiceForTests serviceForTests;
-
-    @Autowired
     MockMvc mockMvc;
 
     private Long id;
 
     @Before
     public void setup() {
-        serviceForTests.clearDB();
         id = userService.addUser("test12345", "12345", "test12345@mail.ru");
     }
 
@@ -156,10 +151,5 @@ public class UserControllerTest {
                 .content("{\"newPassword\":\"67\", \"oldPassword\":\"12345\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("error").value("Password should be 4 to 30 characters.\n"));
-    }
-
-    @After
-    public void tearDown() {
-        serviceForTests.clearDB();
     }
 }

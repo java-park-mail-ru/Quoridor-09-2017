@@ -10,7 +10,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -51,7 +50,7 @@ public class GameServiceTest {
     public void setup() throws IOException {
         userId1 = 1L;
         userId2 = 2L;
-        Mockito.when(userService.getUserById(anyLong())).thenReturn(new User(1L, "test",
+        when(userService.getUserById(anyLong())).thenReturn(new User(1L, "test",
                 "12345", "test@mail.ru"));
         when(gameSocketService.isConnected(userId1)).thenReturn(true);
         when(gameSocketService.isConnected(userId2)).thenReturn(true);

@@ -4,9 +4,6 @@ import application.game.logic.Game;
 import application.game.logic.Point;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,8 +12,6 @@ import java.util.Objects;
 import static org.junit.Assert.*;
 
 @SuppressWarnings({"InstanceMethodNamingConvention", "MagicNumber"})
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@RunWith(SpringRunner.class)
 public class MovementWithWallsTest {
     private Long userId1;
     private Long userId2;

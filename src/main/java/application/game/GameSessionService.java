@@ -13,13 +13,14 @@ import org.springframework.web.socket.CloseStatus;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class GameSessionService {
     private static final Logger LOGGER = LoggerFactory.getLogger(GameSessionService.class);
 
     @NotNull
-    private final Map<Long, GameSession> gameSessions = new HashMap<>();
+    private final ConcurrentHashMap<Long, GameSession> gameSessions = new ConcurrentHashMap<>();
 
     @NotNull
     private final GameSocketService gameSocketService;
@@ -32,14 +33,13 @@ public class GameSessionService {
         return gameSessions.containsKey(userId);
     }
 
-    public Map<Long, GameSession> getGameSessions() {
+    //visible for testing
+    Map<Long, GameSession> getGameSessions() {
         return gameSessions;
     }
 
     public Set<GameSession> getSessions() {
-        final Set<GameSession> result = new HashSet<>();
-        result.addAll(gameSessions.values());
-        return result;
+        return new HashSet<>(gameSessions.values());
     }
 
     public boolean checkHealthState(@NotNull GameSession gameSession) {
