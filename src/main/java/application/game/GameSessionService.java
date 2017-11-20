@@ -125,6 +125,19 @@ public class GameSessionService {
         LOGGER.info(info.toString());
     }
 
+    public void handleUnexpectedEnding(@NotNull Long userId, @NotNull FinishGame message) {
+        final GameSession session = gameSessions.get(userId);
+        final Long anotherUser = session.getAnotherPlayer(userId);
+        if (gameSocketService.isConnected(anotherUser)) {
+            try {
+                gameSocketService.sendMessageToUser(anotherUser, message);
+            } catch (IOException e) {
+                LOGGER.warn("Failed to send FinishGameMessage to user " + anotherUser, e);
+            }
+        }
+        forceTerminate(session, true);
+    }
+
     public AbstractMap.SimpleEntry<Long, List<Point>> handleTask(Long userId, List<Point> points) {
         final GameSession session = gameSessions.get(userId);
         if (session.isFinished()) {

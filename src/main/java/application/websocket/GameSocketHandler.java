@@ -1,6 +1,7 @@
 package application.websocket;
 
 import application.dao.UserService;
+import application.game.messages.FinishGame;
 import application.game.messages.InfoMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -93,6 +94,13 @@ public class GameSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession webSocketSession, CloseStatus closeStatus) {
         final Long userId = (Long) webSocketSession.getAttributes().get("userId");
+        final FinishGame message = new FinishGame();
+        message.setWon(true);
+        try {
+            messageHandlerContainer.handle(message, userId);
+        } catch (HandleExeption e) {
+            LOGGER.error("Can't handle message of type " + message.getClass().getName() + " with content: " + message, e);
+        }
         if (userId == null) {
             LOGGER.warn("User is disconnected but his session was not found (closeStatus = " + closeStatus + ')');
             return;
