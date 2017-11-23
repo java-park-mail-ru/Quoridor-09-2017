@@ -1,45 +1,43 @@
 package application.game;
 
-import application.game.logic.Point;
-import application.websocket.GameSocketService;
-import application.websocket.Message;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.socket.CloseStatus;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.springframework.web.socket.CloseStatus;
+
+import application.game.logic.Point;
+import application.websocket.GameSocketService;
+import application.websocket.Message;
 
 @SuppressWarnings({"InstanceMethodNamingConvention", "MagicNumber"})
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@RunWith(SpringRunner.class)
 public class GameSessionTest {
     private Long userId1;
     private Long userId2;
     private Long waiter;
     private GameSession testGameSession;
 
-    @Autowired
     private GameSessionService gameSessionService;
-
-    @MockBean
     private GameSocketService gameSocketService;
 
     @Before
     public void setup() throws IOException {
+        gameSocketService = Mockito.mock(GameSocketService.class);
+        gameSessionService = new GameSessionService(gameSocketService);
         userId1 = 1L;
         userId2 = 2L;
         waiter = userId2;
