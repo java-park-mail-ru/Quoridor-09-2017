@@ -1,5 +1,7 @@
-package application;
+package application.users;
 
+import application.dao.User;
+import application.dao.UserService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

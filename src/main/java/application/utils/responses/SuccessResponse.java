@@ -1,6 +1,6 @@
 package application.utils.responses;
 
-import application.User;
+import application.dao.User;
 
 public class SuccessResponse {
     private String login;

@@ -1,7 +1,7 @@
 package application.controllers;
 
-import application.User;
-import application.UserService;
+import application.dao.User;
+import application.dao.UserService;
 import application.utils.validators.Validator;
 import application.utils.responses.BadResponse;
 import application.utils.responses.InfoResponse;
@@ -71,5 +71,4 @@ public class SessionController {
         httpSession.removeAttribute("userId");
         return ResponseEntity.status(HttpStatus.OK).body(new InfoResponse("Successful logout"));
     }
-
 }
