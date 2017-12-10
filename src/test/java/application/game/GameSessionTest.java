@@ -32,6 +32,7 @@ public class GameSessionTest {
     private GameSession testGameSession;
 
     private GameSessionService gameSessionService;
+    @SuppressWarnings("FieldCanBeLocal")
     private GameSocketService gameSocketService;
 
     @Before

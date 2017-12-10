@@ -60,7 +60,7 @@ public class GameService {
         }
         final List<Point> points;
         try {
-            points = coordinates.fromStringToList();
+            points = coordinates.fromIntArrayToPointList();
         } catch (HandleExeption e) {
             try {
                 final InfoMessage infoMessage = new InfoMessage();
@@ -100,7 +100,7 @@ public class GameService {
     //visible for testing
     void putCoordinates(@NotNull Long userId, @NotNull Coordinates coordinates) {
         try {
-            tasks.put(userId, coordinates.fromStringToList());
+            tasks.put(userId, coordinates.fromIntArrayToPointList());
         } catch (HandleExeption ignored) {
             LOGGER.error(ignored.getMessage());
         }
@@ -132,7 +132,7 @@ public class GameService {
         final Coordinates coordinates = new Coordinates();
         for (Map.Entry<Long, List<Point>> message : messagesToSend.entrySet()) {
             try {
-                coordinates.fromListToString(message.getValue());
+                coordinates.fromPointListToIntArray(message.getValue());
                 gameSocketService.sendMessageToUser(message.getKey(), coordinates);
             } catch (IOException e) {
                 try {
