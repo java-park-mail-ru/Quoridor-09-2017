@@ -121,6 +121,11 @@ public class GameService {
         final List<GameSession> sessionsToFinish = new ArrayList<>();
         for (GameSession session : gameSessionService.getSessions()) {
             if (session.tryFinishGame()) {
+                if (session.getFirstResult()) {
+                    UserService.increaseScore(session.getFirstUserId());
+                } else if (session.getSecondResult()) {
+                    UserService.increaseScore(session.getSecondUserId());
+                }
                 sessionsToFinish.add(session);
                 continue;
             }

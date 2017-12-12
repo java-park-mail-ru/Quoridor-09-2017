@@ -15,13 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class UserService {
-    private final JdbcTemplate template;
+    private static JdbcTemplate template = null;
 
     private static final Logger LOGGER = LoggerFactory.getLogger("application");
 
     @Autowired
     public UserService(JdbcTemplate template) {
-        this.template = template;
+        UserService.template = template;
     }
 
     private static final RowMapper<User> USER_MAP = (res, num) -> new User(res.getLong("id"),
@@ -124,5 +124,14 @@ public class UserService {
 
     public boolean checkPassword(long userId, String password) {
         return this.getUserById(userId).getPassword().equals(password);
+    }
+
+    public static void increaseScore(long userId) {
+        try {
+            template.update("UPDATE users SET score = score + 1 WHERE id = ?", userId);
+        } catch (DataAccessException e) {
+            LOGGER.error("Can't increase score of user with id = " + userId);
+        }
+
     }
 }
