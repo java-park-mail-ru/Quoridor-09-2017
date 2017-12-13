@@ -1,5 +1,6 @@
 package application.game;
 
+import application.dao.UserService;
 import application.game.logic.Point;
 import application.game.messages.FinishGame;
 import application.game.messages.InfoMessage;
@@ -136,6 +137,7 @@ public class GameSessionService {
             }
         }
         forceTerminate(session, true);
+        UserService.increaseScore(anotherUser);
     }
 
     public AbstractMap.SimpleEntry<Long, List<Point>> handleTask(Long userId, List<Point> points) {
