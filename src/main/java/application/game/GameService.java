@@ -106,6 +106,7 @@ public class GameService {
         }
     }
 
+    @SuppressWarnings("OverlyComplexMethod")
     public Map<Long, List<Point>> gameStep() {
         final Map<Long, List<Point>> messagesToSend = new HashMap<>();
         final Set<Long> users = tasks.keySet();
@@ -122,9 +123,9 @@ public class GameService {
         for (GameSession session : gameSessionService.getSessions()) {
             if (session.tryFinishGame()) {
                 if (session.getFirstResult()) {
-                    UserService.increaseScore(session.getFirstUserId());
+                    userService.increaseScore(session.getFirstUserId());
                 } else if (session.getSecondResult()) {
-                    UserService.increaseScore(session.getSecondUserId());
+                    userService.increaseScore(session.getSecondUserId());
                 }
                 sessionsToFinish.add(session);
                 continue;

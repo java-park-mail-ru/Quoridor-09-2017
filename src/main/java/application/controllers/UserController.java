@@ -126,7 +126,7 @@ public class UserController {
 
     @GetMapping(path = "/scoreBoard")
     public ResponseEntity getScoreboard(@RequestParam long offset, @RequestParam long limit) {
-        List<User> scoreBoard = userService.getScoreBoard(offset, limit);
+        final List<User> scoreBoard = userService.getScoreBoard(offset, limit);
         if (scoreBoard != null) {
             return ResponseEntity.status(HttpStatus.OK).body(new ScoreboardResponse(scoreBoard));
         } else {

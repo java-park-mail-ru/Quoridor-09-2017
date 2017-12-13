@@ -26,8 +26,13 @@ public class GameSessionService {
     @NotNull
     private final GameSocketService gameSocketService;
 
-    public GameSessionService(@NotNull GameSocketService gameSocketService) {
+    @NotNull
+    private final UserService userService;
+
+    public GameSessionService(@NotNull GameSocketService gameSocketService,
+                              @NotNull UserService userService) {
         this.gameSocketService = gameSocketService;
+        this.userService = userService;
     }
 
     public boolean isPlaying(@NotNull Long userId) {
@@ -128,7 +133,14 @@ public class GameSessionService {
 
     public void handleUnexpectedEnding(@NotNull Long userId, @NotNull FinishGame message) {
         final GameSession session = gameSessions.get(userId);
-        final Long anotherUser = session.getAnotherPlayer(userId);
+        final Long anotherUser;
+        try {
+            anotherUser = session.getAnotherPlayer(userId);
+        } catch (NullPointerException e) {
+            LOGGER.info("GameSession was already closed");
+            return;
+        }
+        message.setWon(true);
         if (gameSocketService.isConnected(anotherUser)) {
             try {
                 gameSocketService.sendMessageToUser(anotherUser, message);
@@ -137,7 +149,7 @@ public class GameSessionService {
             }
         }
         forceTerminate(session, true);
-        UserService.increaseScore(anotherUser);
+        userService.increaseScore(anotherUser);
     }
 
     public AbstractMap.SimpleEntry<Long, List<Point>> handleTask(Long userId, List<Point> points) {
@@ -150,8 +162,10 @@ public class GameSessionService {
             final List<Point> resultPoints = session.getGame().iterationOfGame(points);
             if (resultPoints == null) {
                 try {
-                    infoMessage.setMessage("repeat " + session.getGame().getError());
-                    gameSocketService.sendMessageToUser(userId, infoMessage);
+                    if (session.getGame().getError() != null) {
+                        infoMessage.setMessage("repeat " + session.getGame().getError());
+                        gameSocketService.sendMessageToUser(userId, infoMessage);
+                    }
                 } catch (IOException e) {
                     LOGGER.warn("Failed to send RepeatGameMessage to user " + userId, e);
                 }

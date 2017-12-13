@@ -17,13 +17,13 @@ import java.util.List;
 @Service
 @Transactional
 public class UserService {
-    private static JdbcTemplate template = null;
+    private final JdbcTemplate template;
 
     private static final Logger LOGGER = LoggerFactory.getLogger("application");
 
     @Autowired
     public UserService(JdbcTemplate template) {
-        UserService.template = template;
+        this.template = template;
     }
 
     private static final RowMapper<User> USER_MAP = (res, num) -> new User(res.getLong("id"),
@@ -131,7 +131,7 @@ public class UserService {
         return this.getUserById(userId).getPassword().equals(password);
     }
 
-    public static void increaseScore(long userId) {
+    public void increaseScore(long userId) {
         try {
             template.update("UPDATE users SET score = score + 1 WHERE id = ?", userId);
         } catch (DataAccessException e) {

@@ -15,6 +15,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 
+import application.dao.UserService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -38,7 +39,8 @@ public class GameSessionTest {
     @Before
     public void setup() throws IOException {
         gameSocketService = Mockito.mock(GameSocketService.class);
-        gameSessionService = new GameSessionService(gameSocketService);
+        final UserService userService = Mockito.mock(UserService.class);
+        gameSessionService = new GameSessionService(gameSocketService, userService);
         userId1 = 1L;
         userId2 = 2L;
         waiter = userId2;

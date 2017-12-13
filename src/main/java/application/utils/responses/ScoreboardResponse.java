@@ -5,27 +5,7 @@ import application.dao.User;
 import java.util.ArrayList;
 import java.util.List;
 
-class ScoreboardRow {
-    private String userName;
-    private Integer score;
-
-
-    ScoreboardRow(String userName, Integer score) {
-        this.userName = userName;
-        this.score = score;
-    }
-
-    @SuppressWarnings("unused")
-    public Integer getScore() {
-        return score;
-    }
-
-    @SuppressWarnings("unused")
-    public String getUserName() {
-        return userName;
-    }
-}
-
+@SuppressWarnings("unused")
 public class ScoreboardResponse {
     private List<ScoreboardRow> scoreboard = new ArrayList<>();
 

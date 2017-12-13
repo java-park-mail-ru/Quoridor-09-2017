@@ -43,7 +43,7 @@ public class GameServiceTest {
     @Before
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
-        gameSessionService = new GameSessionService(gameSocketService);
+        gameSessionService = new GameSessionService(gameSocketService, userService);
         gameService = new GameService(userService, gameSocketService, gameSessionService);
         userId1 = 1L;
         userId2 = 2L;

@@ -11,6 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @RunWith(SpringRunner.class)
 @Transactional
@@ -106,5 +108,41 @@ public class UserServiceTest {
     @Test
     public void checkPassword() {
         assertTrue(userService.checkPassword(testId, "12345"));
+    }
+
+    @SuppressWarnings("MagicNumber")
+    @Test
+    public void getScoreBoard() {
+        final long testId1 = userService.addUser("user1", "12345", "user1@mail.ru");
+        final long testId2 = userService.addUser("user2", "12345", "user2@mail.ru");
+        final long testId3 = userService.addUser("user3", "12345", "user3@mail.ru");
+        final long testId4 = userService.addUser("user4", "12345", "user4@mail.ru");
+        final long testId5 = userService.addUser("user5", "12345", "user5@mail.ru");
+        final long testId6 = userService.addUser("user6", "12345", "user6@mail.ru");
+        final long testId7 = userService.addUser("user7", "12345", "user7@mail.ru");
+
+        userService.increaseScore(testId3);
+        userService.increaseScore(testId5);
+        userService.increaseScore(testId7);
+
+        userService.increaseScore(testId1);
+        userService.increaseScore(testId1);
+        userService.increaseScore(testId4);
+        userService.increaseScore(testId4);
+        userService.increaseScore(testId6);
+        userService.increaseScore(testId6);
+
+        userService.increaseScore(testId2);
+        userService.increaseScore(testId2);
+        userService.increaseScore(testId2);
+
+        final List<User> users = userService.getScoreBoard(1L, 4L);
+        assertEquals(users.size(), 4);
+        assertEquals(users.get(0).getLogin(), "user1");
+        assertEquals(users.get(0).getScore(), 2);
+        assertEquals(users.get(1).getLogin(), "user4");
+        assertEquals(users.get(2).getLogin(), "user6");
+        assertEquals(users.get(3).getLogin(), "user3");
+        assertEquals(users.get(3).getScore(), 1);
     }
 }
