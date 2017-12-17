@@ -75,6 +75,14 @@ public class GameSession {
         return secondResult;
     }
 
+    public void setFirstResult(Boolean firstResult) {
+        this.firstResult = firstResult;
+    }
+
+    public void setSecondResult(Boolean secondResult) {
+        this.secondResult = secondResult;
+    }
+
     public Game getGame() {
         return game;
     }

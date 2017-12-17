@@ -13,8 +13,7 @@ import org.springframework.stereotype.Service;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.*;
 
 @Service
 public class GameService {
@@ -25,6 +24,15 @@ public class GameService {
 
     @NotNull
     private ConcurrentHashMap<Long, List<Point>> tasks = new ConcurrentHashMap<>();
+
+    @NotNull
+    private ConcurrentHashMap<Long, ScheduledFuture> timers = new ConcurrentHashMap<>();
+
+    @NotNull
+    private static final int THREAD_COUNT = 10;
+
+    @NotNull
+    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(THREAD_COUNT);
 
     @NotNull
     private final UserService userService;
@@ -75,6 +83,26 @@ public class GameService {
         gameStep();
     }
 
+    private void setTimer(Long prevUserId, Long newUserId) {
+        final ScheduledFuture oldTimer = timers.remove(prevUserId);
+        if (oldTimer != null) {
+            oldTimer.cancel(true);
+        }
+        final Runnable task = () -> {
+            final GameSession gameSession = gameSessionService.getGameSession(newUserId);
+            if (Objects.equals(gameSession.getFirstUserId(), newUserId)) {
+                gameSession.setFirstResult(false);
+                gameSession.setSecondResult(true);
+            } else {
+                gameSession.setFirstResult(true);
+                gameSession.setSecondResult(false);
+            }
+            gameSessionService.finishGame(gameSession);
+            gameSessionService.forceTerminate(gameSession, false);
+        };
+        timers.put(newUserId, executorService.schedule(task, 1, TimeUnit.MINUTES));
+    }
+
     private void tryStartGame() {
         final Set<Long> matchedPlayers = new LinkedHashSet<>();
         while (waiters.size() >= 2 || waiters.size() >= 1 && matchedPlayers.size() >= 1) {
@@ -85,7 +113,10 @@ public class GameService {
             matchedPlayers.add(candidate);
             if (matchedPlayers.size() == 2) {
                 final Iterator<Long> iterator = matchedPlayers.iterator();
-                gameSessionService.startGame(iterator.next(), iterator.next());
+                final Long userId = iterator.next();
+                gameSessionService.startGame(userId, iterator.next());
+                final Long waiter = gameSessionService.getGameSession(userId).getWaiter();
+                setTimer(waiter, gameSessionService.getGameSession(waiter).getAnotherPlayer(waiter));
                 matchedPlayers.clear();
             }
         }
@@ -115,6 +146,7 @@ public class GameService {
                     curUser, tasks.remove(curUser));
             if (messageToSend != null) {
                 messagesToSend.put(messageToSend.getKey(), messageToSend.getValue());
+                setTimer(curUser, messageToSend.getKey());
             }
         }
 
