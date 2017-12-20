@@ -66,7 +66,7 @@ public class Game {
         final List<Point> result = new ArrayList<>();
         switch (points.size()) {
             case 1:
-                if (!canMove(points.get(0))) {
+                if (!canMove(players.get(playerNumber).getLocation(), points.get(0), players.get(playerNumber).getField())) {
                     error = "Can't go to this point";
                     return null;
                 }
@@ -95,7 +95,7 @@ public class Game {
                 }
                 players.get(playerNumber).getField().addWall(myWall);
 
-                final Wall enemyWall = buildWall(recountCoordinates(points.get(1)), recountCoordinates(points.get(0)), nextPlayerNumber());
+                final Wall enemyWall = buildWallWithoutChecks(recountCoordinates(points.get(1)), recountCoordinates(points.get(0)));
                 players.get(nextPlayerNumber()).getField().addWall(enemyWall);
 
                 result.add(enemyWall.getLocation().get(0));
@@ -115,12 +115,10 @@ public class Game {
     }
 
     @SuppressWarnings({"OverlyComplexBooleanExpression", "OverlyComplexMethod"})
-    private boolean canMove(Point point) {
-        final Field field = players.get(playerNumber).getField();
+    private boolean canMove(Point curLocation, Point point, Field field) {
         if (field.getCellStatus(point) != 'F') {
             return false;
         }
-        final Point curLocation = players.get(playerNumber).getLocation();
         //Проверка на то, движется ли игрок только по горизонтали или только по вертикали
         if ((point.getFirstCoordinate() - curLocation.getFirstCoordinate()) == 0
                 ^ (point.getSecondCoordinate() - curLocation.getSecondCoordinate()) == 0) {
@@ -154,6 +152,18 @@ public class Game {
     private boolean checkCoordinate(Point point) {
         return (point.getFirstCoordinate() >= 0 && point.getFirstCoordinate() < (dimension * 2 - 1)
                 && point.getSecondCoordinate() >= 0 && point.getSecondCoordinate() < (dimension * 2 - 1));
+    }
+
+    private Wall buildWallWithoutChecks(Point begin, Point end) {
+        if (begin.getFirstCoordinate() == end.getFirstCoordinate()
+                && Math.abs(begin.getSecondCoordinate() - end.getSecondCoordinate()) == 2) {
+            return new Wall(begin, new Point(begin.getFirstCoordinate(), begin.getSecondCoordinate() - 1), end);
+        }
+        if (begin.getSecondCoordinate() == end.getSecondCoordinate()
+                && Math.abs(end.getFirstCoordinate() - begin.getFirstCoordinate()) == 2) {
+            return new Wall(begin, new Point(end.getFirstCoordinate() - 1, end.getSecondCoordinate()), end);
+        }
+        return null;
     }
 
     //begin - верхняя или левая
@@ -190,6 +200,87 @@ public class Game {
         return (wall.getLocation().get(0).getFirstCoordinate() != wall.getLocation().get(1).getFirstCoordinate()
                 || wall.getLocation().get(0).getFirstCoordinate() % 2 != 0)
                 && (wall.getLocation().get(0).getSecondCoordinate() != wall.getLocation().get(1).getSecondCoordinate()
-                || wall.getLocation().get(0).getSecondCoordinate() % 2 != 0);
+                || wall.getLocation().get(0).getSecondCoordinate() % 2 != 0)
+                && canArriveAtFinish(wall, player);
+    }
+
+    public boolean canArriveAtFinish(Wall wall, int player) {
+        Field field = new Field(players.get(player).getField());
+        field.addWall(wall);
+        final int matrixSize = dimension * dimension;
+        final int[][] adjacencyMatrix = new int[matrixSize][matrixSize];
+        initAdjacencyMatrix(adjacencyMatrix);
+        buildAdjacencyMatrix(field, adjacencyMatrix);
+        final int[] transitiveClosure = new int[matrixSize];
+        initTransitiveClosure(transitiveClosure);
+        buildTransitiveClosure(adjacencyMatrix, transitiveClosure, getNumberFromCurLocation(player));
+        final boolean result = contentsFinish(transitiveClosure);
+
+        player = (player + 1) % 2;
+        field = new Field(players.get(player).getField());
+        field.addWall(buildWallWithoutChecks(recountCoordinates(wall.getLocation().get(2)),
+                recountCoordinates(wall.getLocation().get(0))));
+        initAdjacencyMatrix(adjacencyMatrix);
+        buildAdjacencyMatrix(field, adjacencyMatrix);
+        initTransitiveClosure(transitiveClosure);
+        buildTransitiveClosure(adjacencyMatrix, transitiveClosure, getNumberFromCurLocation(player));
+        return result && contentsFinish(transitiveClosure);
+    }
+
+    private void initAdjacencyMatrix(int[][] adjacencyMatrix) {
+        for (int i = 0; i < dimension * dimension; i++) {
+            for (int j = 0; j < dimension * dimension; j++) {
+                if (i == j) {
+                    adjacencyMatrix[i][j] = 1;
+                    continue;
+                }
+                adjacencyMatrix[i][j] = 0;
+            }
+        }
+    }
+
+    private void buildAdjacencyMatrix(Field field, int[][] adjacencyMatrix) {
+        for (int i = 0; i < dimension * dimension; i++) {
+            final Point curLocation = getPointFromNumber(i);
+            for (int j = 0; j < dimension * dimension; j++) {
+                final Point target = getPointFromNumber(j);
+                if (canMove(curLocation, target, field)) {
+                    adjacencyMatrix[i][j] = 1;
+                }
+            }
+        }
+    }
+
+    private Point getPointFromNumber(int pointNumber) {
+        return new Point((pointNumber / dimension) * 2, (pointNumber % dimension) * 2);
+    }
+
+    private int getNumberFromCurLocation(int player) {
+        final Point point = players.get(player).getLocation();
+        return ((point.getFirstCoordinate() / 2) * dimension + (point.getSecondCoordinate() / 2));
+    }
+
+    private void initTransitiveClosure(int[] transitiveClosure) {
+        for (int i = 0; i < transitiveClosure.length; i++) {
+            transitiveClosure[i] = -1;
+        }
+    }
+
+    private void buildTransitiveClosure(int[][] adjacencyMatrix, int[] transitiveClosure, int rowNumber) {
+        for (int j = 0; j < dimension * dimension; j++) {
+            if ((adjacencyMatrix[rowNumber][j] == 1) && (transitiveClosure[j] < 0)) {
+                transitiveClosure[j] = 1;
+                buildTransitiveClosure(adjacencyMatrix, transitiveClosure, j);
+            }
+        }
+    }
+
+    private boolean contentsFinish(int[] transitiveClosure) {
+        for (int i = dimension * dimension - dimension; i < dimension * dimension; i++) {
+            if (transitiveClosure[i] > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 }

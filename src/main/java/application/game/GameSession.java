@@ -43,7 +43,6 @@ public class GameSession {
         this.sessionId = ID_GENERATOR.getAndIncrement();
         this.gameSessionService = gameSessionService;
 
-        //Магическое число!!!
         this.game = new Game(FIELD_DIMENSION, firstUserId, secondUserId);
 
         this.isFinished = false;

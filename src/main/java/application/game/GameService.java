@@ -86,19 +86,23 @@ public class GameService {
     private void setTimer(Long prevUserId, Long newUserId) {
         final ScheduledFuture oldTimer = timers.remove(prevUserId);
         if (oldTimer != null) {
-            oldTimer.cancel(true);
+            oldTimer.cancel(false);
         }
         final Runnable task = () -> {
             final GameSession gameSession = gameSessionService.getGameSession(newUserId);
-            if (Objects.equals(gameSession.getFirstUserId(), newUserId)) {
-                gameSession.setFirstResult(false);
-                gameSession.setSecondResult(true);
-            } else {
-                gameSession.setFirstResult(true);
-                gameSession.setSecondResult(false);
+            if (gameSession != null) {
+                if (Objects.equals(gameSession.getFirstUserId(), newUserId)) {
+                    gameSession.setFirstResult(false);
+                    gameSession.setSecondResult(true);
+                    userService.increaseScore(gameSession.getSecondUserId());
+                } else {
+                    gameSession.setFirstResult(true);
+                    gameSession.setSecondResult(false);
+                    userService.increaseScore(gameSession.getFirstUserId());
+                }
+                gameSessionService.finishGame(gameSession);
+                gameSessionService.forceTerminate(gameSession, false);
             }
-            gameSessionService.finishGame(gameSession);
-            gameSessionService.forceTerminate(gameSession, false);
         };
         timers.put(newUserId, executorService.schedule(task, 1, TimeUnit.MINUTES));
     }
