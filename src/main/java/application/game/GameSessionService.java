@@ -141,8 +141,7 @@ public class GameSessionService {
             return;
         }
         message.setWon(true);
-        if (session.getStepCount() == curCount) {
-            session.incStepCount();
+        if (session.getAndIncStepCount() == curCount) {
             if (gameSocketService.isConnected(anotherUser)) {
                 try {
                     gameSocketService.sendMessageToUser(anotherUser, message);
@@ -173,8 +172,7 @@ public class GameSessionService {
                     LOGGER.warn("Failed to send RepeatGameMessage to user " + userId, e);
                 }
             } else {
-                if (curCount == session.getStepCount()) {
-                    session.incStepCount();
+                if (curCount == session.getAndIncStepCount()) {
                     session.setWaiter(userId);
                     return new AbstractMap.SimpleEntry<>(session.getAnotherPlayer(userId), resultPoints);
                 }
