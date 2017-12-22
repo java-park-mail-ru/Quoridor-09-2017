@@ -51,13 +51,13 @@ public class Game {
     @SuppressWarnings({"ConstantConditions", "OverlyComplexMethod"})
     public List<Point> iterationOfGame(List<Point> points) {
         if (points == null) {
-            error = "Null is comming as parametr";
+            error = "Ваши координаты не получены";
             return null;
         }
         error = null;
         for (Point point: points) {
             if (!checkCoordinate(point)) {
-                error = "Incorrect coordinates";
+                error = "Некорректные координаты";
                 return null;
             }
         }
@@ -67,7 +67,7 @@ public class Game {
         switch (points.size()) {
             case 1:
                 if (!canMove(players.get(playerNumber).getLocation(), points.get(0), players.get(playerNumber).getField())) {
-                    error = "Can't go to this point";
+                    error = "Нельзя пойти в эту точку";
                     return null;
                 }
 
@@ -88,12 +88,12 @@ public class Game {
                 break;
             case 2:
                 if (!players.get(playerNumber).canAddWall()) {
-                    error = "Can't add wall";
+                    error = "Нельзя добавить стену";
                     return null;
                 }
                 final Wall myWall = buildWall(points.get(0), points.get(1), playerNumber);
                 if (myWall == null) {
-                    error = "Can't add wall";
+                    error = "Нельзя добавить стену";
                     return null;
                 }
                 players.get(playerNumber).getField().addWall(myWall);
@@ -106,7 +106,7 @@ public class Game {
                 result.add(enemyWall.getLocation().get(2));
                 break;
             default:
-                error = "Wrong number of points";
+                error = "Некорректное количество координат";
                 return null;
         }
         goToNextPlayerNumber();

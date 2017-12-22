@@ -79,7 +79,7 @@ public class GameService {
         } catch (HandleExeption e) {
             try {
                 final InfoMessage infoMessage = new InfoMessage();
-                infoMessage.setMessage("repeat");
+                infoMessage.setMessage("Повторите ход");
                 gameSocketService.sendMessageToUser(userId, infoMessage);
             } catch (IOException ex) {
                 LOGGER.warn("Failed to send RepeatGameMessage to user " + userId, e, ex);
@@ -160,8 +160,11 @@ public class GameService {
 
     @SuppressWarnings("OverlyComplexMethod")
     public Map<Long, List<Point>> gameStep() {
-        final Map<Long, List<Point>> messagesToSend = new HashMap<>();
         final Set<Long> users = tasks.keySet();
+        final InfoMessage successMessage = new InfoMessage();
+        successMessage.setMessage("OK");
+        final Map<Long, InfoMessage> successMessages = new HashMap<>();
+        final Map<Long, List<Point>> messagesToSend = new HashMap<>();
         for (Long curUser : users) {
             final AbstractMap.SimpleEntry<Long, List<Point>> messageToSend = gameSessionService.handleTask(
                     curUser, tasks.remove(curUser), anticipatedSteps.get(curUser));
@@ -169,6 +172,7 @@ public class GameService {
                 anticipatedSteps.put(curUser, anticipatedSteps.get(curUser) + 1);
                 anticipatedSteps.put(messageToSend.getKey(), anticipatedSteps.get(messageToSend.getKey()) + 1);
                 messagesToSend.put(messageToSend.getKey(), messageToSend.getValue());
+                successMessages.put(curUser, successMessage);
                 setTimer(curUser, messageToSend.getKey());
             }
         }
@@ -182,13 +186,22 @@ public class GameService {
             } catch (IOException e) {
                 try {
                     final InfoMessage infoMessage = new InfoMessage();
-                    infoMessage.setMessage("repeat");
+                    infoMessage.setMessage("Повторите ход");
                     gameSocketService.sendMessageToUser(gameSessionService.getGameSession(message.getKey())
                             .getAnotherPlayer(message.getKey()), infoMessage);
                 } catch (IOException ex) {
                     sessionsToTerminate.add(gameSessionService.getGameSession(message.getKey()));
                     LOGGER.error("Can't send data to user ", e, ex);
                 }
+            }
+        }
+
+        for (Map.Entry<Long, InfoMessage> message : successMessages.entrySet()) {
+            try {
+                gameSocketService.sendMessageToUser(message.getKey(), message.getValue());
+            } catch (IOException e) {
+                sessionsToTerminate.add(gameSessionService.getGameSession(message.getKey()));
+                LOGGER.error("Can't send data to user ", e);
             }
         }
 

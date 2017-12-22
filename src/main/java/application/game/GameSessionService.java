@@ -164,7 +164,7 @@ public class GameSessionService {
             if (resultPoints == null) {
                 try {
                     if (session.getGame().getError() != null) {
-                        infoMessage.setMessage("repeat " + session.getGame().getError());
+                        infoMessage.setMessage("Повторите ход. " + session.getGame().getError());
                         gameSocketService.sendMessageToUser(userId, infoMessage);
                     }
                 } catch (IOException e) {
@@ -178,7 +178,7 @@ public class GameSessionService {
             }
         } else {
             try {
-                infoMessage.setMessage("wait");
+                infoMessage.setMessage("Подождите: сейчас не Ваш ход");
                 gameSocketService.sendMessageToUser(userId, infoMessage);
             } catch (IOException e) {
                 LOGGER.warn("Failed to send WaitGameMessage to user " + userId, e);
