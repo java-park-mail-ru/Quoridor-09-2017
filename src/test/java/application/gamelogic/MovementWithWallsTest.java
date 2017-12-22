@@ -236,4 +236,27 @@ public class MovementWithWallsTest {
         movement.add(new Point(3, 7));
         assertNull(game.iterationOfGame(movement));
     }
+
+    @Test
+    public void cant_add_more_then_8_walls() {
+        final List<Point> movement = new ArrayList<>();
+        int x = 16;
+        for (int i = 4; i > 0; i--) {
+            movement.add(new Point(1, x));
+            movement.add(new Point(1, x - 2));
+            assertNotNull(game.iterationOfGame(movement));
+            assertNotNull(game.iterationOfGame(movement));
+            movement.clear();
+            movement.add(new Point(3, x));
+            movement.add(new Point(3, x - 2));
+            assertNotNull(game.iterationOfGame(movement));
+            assertNotNull(game.iterationOfGame(movement));
+            movement.clear();
+            x -= 3;
+        }
+        movement.add(new Point(5, 16));
+        movement.add(new Point(5, 14));
+        assertNull(game.iterationOfGame(movement));
+        assertNull(game.iterationOfGame(movement));
+    }
 }

@@ -135,6 +135,12 @@ public class GameServiceTest {
         coordinates.fromPointListToIntArray(movement);
         gameService.putCoordinates(userId1, coordinates);
         assertTrue(gameService.gameStep().isEmpty());
+
+        movement.clear();
+        movement.add(new Point(2, 8));
+        coordinates.fromPointListToIntArray(movement);
+        gameService.putCoordinates(userId1, coordinates);
+        assertFalse(gameService.gameStep().isEmpty());
     }
 
     @After

@@ -31,6 +31,6 @@ public class FinishGameHandler extends MessageHandler<FinishGame> {
 
     @Override
     public void handle(@NotNull FinishGame message, @NotNull Long userId) {
-        gameSessionService.handleUnexpectedEnding(userId, message);
+        gameSessionService.handleUnexpectedEnding(userId, message, gameSessionService.getGameSession(userId).getStepCount());
     }
 }

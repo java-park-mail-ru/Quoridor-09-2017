@@ -4,6 +4,7 @@ import application.game.logic.Game;
 
 import javax.validation.constraints.NotNull;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class GameSession {
@@ -30,6 +31,9 @@ public class GameSession {
 
     @NotNull
     private final GameSessionService gameSessionService;
+
+    @NotNull
+    private final AtomicInteger stepCounter = new AtomicInteger(0);
 
     private static final int FIELD_DIMENSION = 9;
 
@@ -102,6 +106,14 @@ public class GameSession {
             return firstUserId;
         }
         return null;
+    }
+
+    public int getStepCount() {
+        return stepCounter.get();
+    }
+
+    public void incStepCount() {
+        stepCounter.incrementAndGet();
     }
 
     @Override

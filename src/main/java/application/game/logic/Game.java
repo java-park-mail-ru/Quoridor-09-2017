@@ -48,7 +48,7 @@ public class Game {
         players.add(new Player(dimension, userId2));
     }
 
-    @SuppressWarnings("ConstantConditions")
+    @SuppressWarnings({"ConstantConditions", "OverlyComplexMethod"})
     public List<Point> iterationOfGame(List<Point> points) {
         if (points == null) {
             error = "Null is comming as parametr";
@@ -74,20 +74,23 @@ public class Game {
                 final Point oldLocation = curPlayer.getLocation();
                 curPlayer.getField().clearCell(oldLocation);
                 curPlayer.setLocation(points.get(0));
-
-                if (curPlayer.haveWon()) {
-                    isFinished = true;
-                    winer = curPlayer.getUserId();
-                    return null;
-                }
                 curPlayer.getField().occupyCellByPlayer(points.get(0), 'M');
 
                 enemyPlayer.getField().clearCell(recountCoordinates(oldLocation));
                 enemyPlayer.getField().occupyCellByPlayer(recountCoordinates(points.get(0)), 'E');
 
                 result.add(recountCoordinates(points.get(0)));
+                if (curPlayer.haveWon()) {
+                    isFinished = true;
+                    winer = curPlayer.getUserId();
+                    return result;
+                }
                 break;
             case 2:
+                if (!players.get(playerNumber).canAddWall()) {
+                    error = "Can't add wall";
+                    return null;
+                }
                 final Wall myWall = buildWall(points.get(0), points.get(1), playerNumber);
                 if (myWall == null) {
                     error = "Can't add wall";
@@ -98,6 +101,7 @@ public class Game {
                 final Wall enemyWall = buildWallWithoutChecks(recountCoordinates(points.get(1)), recountCoordinates(points.get(0)));
                 players.get(nextPlayerNumber()).getField().addWall(enemyWall);
 
+                players.get(playerNumber).decWallsCount();
                 result.add(enemyWall.getLocation().get(0));
                 result.add(enemyWall.getLocation().get(2));
                 break;

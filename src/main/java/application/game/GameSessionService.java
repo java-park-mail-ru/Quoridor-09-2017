@@ -131,7 +131,7 @@ public class GameSessionService {
         LOGGER.info(info.toString());
     }
 
-    public void handleUnexpectedEnding(@NotNull Long userId, @NotNull FinishGame message) {
+    public void handleUnexpectedEnding(@NotNull Long userId, @NotNull FinishGame message, int curCount) {
         final GameSession session = gameSessions.get(userId);
         final Long anotherUser;
         try {
@@ -141,18 +141,21 @@ public class GameSessionService {
             return;
         }
         message.setWon(true);
-        if (gameSocketService.isConnected(anotherUser)) {
-            try {
-                gameSocketService.sendMessageToUser(anotherUser, message);
-            } catch (IOException e) {
-                LOGGER.warn("Failed to send FinishGameMessage to user " + anotherUser, e);
+        if (session.getStepCount() == curCount) {
+            session.incStepCount();
+            if (gameSocketService.isConnected(anotherUser)) {
+                try {
+                    gameSocketService.sendMessageToUser(anotherUser, message);
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to send FinishGameMessage to user " + anotherUser, e);
+                }
             }
+            forceTerminate(session, true);
+            userService.increaseScore(anotherUser);
         }
-        forceTerminate(session, true);
-        userService.increaseScore(anotherUser);
     }
 
-    public AbstractMap.SimpleEntry<Long, List<Point>> handleTask(Long userId, List<Point> points) {
+    public AbstractMap.SimpleEntry<Long, List<Point>> handleTask(Long userId, List<Point> points, int curCount) {
         final GameSession session = gameSessions.get(userId);
         if (session.isFinished()) {
             return null;
@@ -170,8 +173,11 @@ public class GameSessionService {
                     LOGGER.warn("Failed to send RepeatGameMessage to user " + userId, e);
                 }
             } else {
-                session.setWaiter(userId);
-                return new AbstractMap.SimpleEntry<>(session.getAnotherPlayer(userId), resultPoints);
+                if (curCount == session.getStepCount()) {
+                    session.incStepCount();
+                    session.setWaiter(userId);
+                    return new AbstractMap.SimpleEntry<>(session.getAnotherPlayer(userId), resultPoints);
+                }
             }
         } else {
             try {

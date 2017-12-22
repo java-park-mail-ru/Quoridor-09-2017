@@ -88,9 +88,17 @@ public class GameService {
         if (oldTimer != null) {
             oldTimer.cancel(false);
         }
+        final int stepCount;
+        try {
+            stepCount = gameSessionService.getGameSession(newUserId).getStepCount();
+        } catch (NullPointerException e) {
+            LOGGER.info("GameSession was already closed");
+            return;
+        }
         final Runnable task = () -> {
             final GameSession gameSession = gameSessionService.getGameSession(newUserId);
-            if (gameSession != null) {
+            if (gameSession != null && gameSession.getStepCount() == stepCount) {
+                gameSession.incStepCount();
                 if (Objects.equals(gameSession.getFirstUserId(), newUserId)) {
                     gameSession.setFirstResult(false);
                     gameSession.setSecondResult(true);
@@ -147,7 +155,7 @@ public class GameService {
         final Set<Long> users = tasks.keySet();
         for (Long curUser : users) {
             final AbstractMap.SimpleEntry<Long, List<Point>> messageToSend = gameSessionService.handleTask(
-                    curUser, tasks.remove(curUser));
+                    curUser, tasks.remove(curUser), gameSessionService.getGameSession(curUser).getStepCount());
             if (messageToSend != null) {
                 messagesToSend.put(messageToSend.getKey(), messageToSend.getValue());
                 setTimer(curUser, messageToSend.getKey());
@@ -155,22 +163,6 @@ public class GameService {
         }
 
         final List<GameSession> sessionsToTerminate = new ArrayList<>();
-        final List<GameSession> sessionsToFinish = new ArrayList<>();
-        for (GameSession session : gameSessionService.getSessions()) {
-            if (session.tryFinishGame()) {
-                if (session.getFirstResult()) {
-                    userService.increaseScore(session.getFirstUserId());
-                } else if (session.getSecondResult()) {
-                    userService.increaseScore(session.getSecondUserId());
-                }
-                sessionsToFinish.add(session);
-                continue;
-            }
-            if (!gameSessionService.checkHealthState(session)) {
-                sessionsToTerminate.add(session);
-            }
-        }
-
         final Coordinates coordinates = new Coordinates();
         for (Map.Entry<Long, List<Point>> message : messagesToSend.entrySet()) {
             try {
@@ -186,6 +178,22 @@ public class GameService {
                     sessionsToTerminate.add(gameSessionService.getGameSession(message.getKey()));
                     LOGGER.error("Can't send data to user ", e, ex);
                 }
+            }
+        }
+
+        final List<GameSession> sessionsToFinish = new ArrayList<>();
+        for (GameSession session : gameSessionService.getSessions()) {
+            if (session.tryFinishGame()) {
+                if (session.getFirstResult()) {
+                    userService.increaseScore(session.getFirstUserId());
+                } else if (session.getSecondResult()) {
+                    userService.increaseScore(session.getSecondUserId());
+                }
+                sessionsToFinish.add(session);
+                continue;
+            }
+            if (!gameSessionService.checkHealthState(session)) {
+                sessionsToTerminate.add(session);
             }
         }
 
