@@ -89,8 +89,6 @@ public class GameServiceTest {
         movement.clear();
         movement.add(new Point(0, 1));
         movement.add(new Point(2, 1));
-        gameService.getAnticipatedSteps().put(userId1, 1);
-        gameService.getAnticipatedSteps().put(userId2, 1);
         coordinates.fromPointListToIntArray(movement);
         gameService.putCoordinates(userId2, coordinates);
         result = gameService.gameStep();
@@ -119,8 +117,6 @@ public class GameServiceTest {
 
         movement.clear();
         movement.add(new Point(0, 4));
-        gameService.getAnticipatedSteps().put(userId1, 1);
-        gameService.getAnticipatedSteps().put(userId2, 1);
         coordinates.fromPointListToIntArray(movement);
         gameService.putCoordinates(userId1, coordinates);
         assertTrue(gameService.gameStep().isEmpty());
@@ -130,12 +126,16 @@ public class GameServiceTest {
         coordinates.fromPointListToIntArray(movement);
         gameService.putCoordinates(userId2, coordinates);
         assertFalse(gameService.gameStep().isEmpty());
+        assertTrue(gameService.getAnticipatedSteps().get(userId1) == 2);
+        assertTrue(gameService.getAnticipatedSteps().get(userId2) == 2);
     }
 
     @Test
     public void user_sent_invalid_coordinates() {
         gameService.addUser(userId1);
         gameService.addUser(userId2);
+        gameService.getAnticipatedSteps().put(userId1, 0);
+        gameService.getAnticipatedSteps().put(userId2, 0);
         gameSessionService.getGameSessions().get(userId1).setWaiter(userId2);
         final List<Point> movement = new ArrayList<>();
         movement.add(new Point(1, 8));
@@ -143,12 +143,16 @@ public class GameServiceTest {
         coordinates.fromPointListToIntArray(movement);
         gameService.putCoordinates(userId1, coordinates);
         assertTrue(gameService.gameStep().isEmpty());
+        assertTrue(gameService.getAnticipatedSteps().get(userId1) == 0);
+        assertTrue(gameService.getAnticipatedSteps().get(userId2) == 0);
 
         movement.clear();
         movement.add(new Point(2, 8));
         coordinates.fromPointListToIntArray(movement);
         gameService.putCoordinates(userId1, coordinates);
         assertFalse(gameService.gameStep().isEmpty());
+        assertTrue(gameService.getAnticipatedSteps().get(userId1) == 1);
+        assertTrue(gameService.getAnticipatedSteps().get(userId2) == 1);
     }
 
     @After

@@ -166,8 +166,8 @@ public class GameService {
             final AbstractMap.SimpleEntry<Long, List<Point>> messageToSend = gameSessionService.handleTask(
                     curUser, tasks.remove(curUser), anticipatedSteps.get(curUser));
             if (messageToSend != null) {
-                anticipatedSteps.put(curUser, anticipatedSteps.get(curUser));
-                anticipatedSteps.put(messageToSend.getKey(), anticipatedSteps.get(messageToSend.getKey()));
+                anticipatedSteps.put(curUser, anticipatedSteps.get(curUser) + 1);
+                anticipatedSteps.put(messageToSend.getKey(), anticipatedSteps.get(messageToSend.getKey()) + 1);
                 messagesToSend.put(messageToSend.getKey(), messageToSend.getValue());
                 setTimer(curUser, messageToSend.getKey());
             }
