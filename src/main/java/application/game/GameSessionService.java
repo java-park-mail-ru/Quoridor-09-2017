@@ -83,8 +83,7 @@ public class GameSessionService {
 
     private InitGame createInitMessage(@NotNull Long self, @NotNull Long enemy, @NotNull Long waiter) {
         final InitGame initMessage = new InitGame();
-        initMessage.setSelf(self);
-        initMessage.setEnemy(enemy);
+        initMessage.setEnemy(userService.getUserById(enemy).getLogin());
         initMessage.setIsFirst(!(Objects.equals(self, waiter)));
         return initMessage;
     }
@@ -141,7 +140,7 @@ public class GameSessionService {
             return;
         }
         message.setWon(true);
-        if (session.getAndIncStepCount() == curCount) {
+        if (session.compareAndSetStepCount(curCount, curCount + 1)) {
             if (gameSocketService.isConnected(anotherUser)) {
                 try {
                     gameSocketService.sendMessageToUser(anotherUser, message);
@@ -172,7 +171,7 @@ public class GameSessionService {
                     LOGGER.warn("Failed to send RepeatGameMessage to user " + userId, e);
                 }
             } else {
-                if (curCount == session.getAndIncStepCount()) {
+                if (session.compareAndSetStepCount(curCount, curCount + 1)) {
                     session.setWaiter(userId);
                     return new AbstractMap.SimpleEntry<>(session.getAnotherPlayer(userId), resultPoints);
                 }

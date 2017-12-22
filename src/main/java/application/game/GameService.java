@@ -97,7 +97,7 @@ public class GameService {
         }
         final Runnable task = () -> {
             final GameSession gameSession = gameSessionService.getGameSession(newUserId);
-            if (gameSession != null && gameSession.getAndIncStepCount() == stepCount) {
+            if (gameSession != null && gameSession.compareAndSetStepCount(stepCount, stepCount + 1)) {
                 if (Objects.equals(gameSession.getFirstUserId(), newUserId)) {
                     gameSession.setFirstResult(false);
                     gameSession.setSecondResult(true);

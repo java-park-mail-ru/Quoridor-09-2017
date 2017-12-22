@@ -112,8 +112,8 @@ public class GameSession {
         return stepCounter.get();
     }
 
-    public int getAndIncStepCount() {
-        return stepCounter.getAndIncrement();
+    public boolean compareAndSetStepCount(int expect, int update) {
+        return stepCounter.compareAndSet(expect, update);
     }
 
     @Override

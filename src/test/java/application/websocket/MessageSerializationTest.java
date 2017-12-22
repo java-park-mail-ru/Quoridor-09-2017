@@ -5,12 +5,13 @@ import application.game.messages.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class MessageSerializationTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -123,13 +124,12 @@ public class MessageSerializationTest {
         assertEquals(((InfoMessage) fromJson).getMessage(), "repeat");
     }
 
-    private static final String INIT = "{\"class\":\"InitGame\",\"self\":1,\"enemy\":2,\"isFirst\":true}";
+    private static final String INIT = "{\"class\":\"InitGame\",\"enemy\":\"Ivan\",\"isFirst\":true}";
 
     @Test
     public void initGameWriteTest() throws IOException {
         final InitGame request = new InitGame();
-        request.setSelf(1L);
-        request.setEnemy(2L);
+        request.setEnemy("Ivan");
         request.setIsFirst(true);
         assertEquals(INIT, objectMapper.writeValueAsString(request));
     }
@@ -138,8 +138,7 @@ public class MessageSerializationTest {
     public void initGameReadTest() throws IOException {
         final Message fromJson = objectMapper.readValue(INIT, Message.class);
         assertTrue(fromJson instanceof InitGame);
-        assertTrue(((InitGame) fromJson).getSelf() == 1L);
-        assertTrue(((InitGame) fromJson).getEnemy() == 2L);
+        assertEquals(((InitGame) fromJson).getEnemy(), "Ivan");
         assertTrue(((InitGame) fromJson).getIsFirst());
     }
 }

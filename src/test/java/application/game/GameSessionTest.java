@@ -15,6 +15,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 
+import application.dao.User;
 import application.dao.UserService;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +46,8 @@ public class GameSessionTest {
         userId2 = 2L;
         waiter = userId2;
         testGameSession = new GameSession(userId1, userId2, waiter, gameSessionService);
+        when(userService.getUserById(1L)).thenReturn(new User(1L, "Ivan", "12345", "Ivan@mail.ru"));
+        when(userService.getUserById(2L)).thenReturn(new User(2L, "Petr", "67890", "Petr@mail.ru"));
         when(gameSocketService.isConnected(userId1)).thenReturn(true);
         when(gameSocketService.isConnected(userId2)).thenReturn(true);
         doNothing().when(gameSocketService).sendMessageToUser(anyLong(), any(Message.class));
