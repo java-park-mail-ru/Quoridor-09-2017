@@ -4,6 +4,7 @@ import application.game.logic.Game;
 
 import javax.validation.constraints.NotNull;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class GameSession {
@@ -31,6 +32,9 @@ public class GameSession {
     @NotNull
     private final GameSessionService gameSessionService;
 
+    @NotNull
+    private final AtomicInteger stepCounter = new AtomicInteger(0);
+
     private static final int FIELD_DIMENSION = 9;
 
     public GameSession(@NotNull Long firstUserId,
@@ -43,7 +47,6 @@ public class GameSession {
         this.sessionId = ID_GENERATOR.getAndIncrement();
         this.gameSessionService = gameSessionService;
 
-        //Магическое число!!!
         this.game = new Game(FIELD_DIMENSION, firstUserId, secondUserId);
 
         this.isFinished = false;
@@ -75,6 +78,14 @@ public class GameSession {
         return secondResult;
     }
 
+    public void setFirstResult(Boolean firstResult) {
+        this.firstResult = firstResult;
+    }
+
+    public void setSecondResult(Boolean secondResult) {
+        this.secondResult = secondResult;
+    }
+
     public Game getGame() {
         return game;
     }
@@ -95,6 +106,14 @@ public class GameSession {
             return firstUserId;
         }
         return null;
+    }
+
+    public int getStepCount() {
+        return stepCounter.get();
+    }
+
+    public boolean compareAndSetStepCount(int expect, int update) {
+        return stepCounter.compareAndSet(expect, update);
     }
 
     @Override

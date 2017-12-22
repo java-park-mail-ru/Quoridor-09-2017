@@ -1,5 +1,6 @@
 package application.game;
 
+import application.dao.UserService;
 import application.game.logic.Point;
 import application.game.messages.FinishGame;
 import application.game.messages.InfoMessage;
@@ -25,8 +26,13 @@ public class GameSessionService {
     @NotNull
     private final GameSocketService gameSocketService;
 
-    public GameSessionService(@NotNull GameSocketService gameSocketService) {
+    @NotNull
+    private final UserService userService;
+
+    public GameSessionService(@NotNull GameSocketService gameSocketService,
+                              @NotNull UserService userService) {
         this.gameSocketService = gameSocketService;
+        this.userService = userService;
     }
 
     public boolean isPlaying(@NotNull Long userId) {
@@ -77,8 +83,7 @@ public class GameSessionService {
 
     private InitGame createInitMessage(@NotNull Long self, @NotNull Long enemy, @NotNull Long waiter) {
         final InitGame initMessage = new InitGame();
-        initMessage.setSelf(self);
-        initMessage.setEnemy(enemy);
+        initMessage.setEnemy(userService.getUserById(enemy).getLogin());
         initMessage.setIsFirst(!(Objects.equals(self, waiter)));
         return initMessage;
     }
@@ -125,20 +130,30 @@ public class GameSessionService {
         LOGGER.info(info.toString());
     }
 
-    public void handleUnexpectedEnding(@NotNull Long userId, @NotNull FinishGame message) {
+    public void handleUnexpectedEnding(@NotNull Long userId, @NotNull FinishGame message, int curCount) {
         final GameSession session = gameSessions.get(userId);
-        final Long anotherUser = session.getAnotherPlayer(userId);
-        if (gameSocketService.isConnected(anotherUser)) {
-            try {
-                gameSocketService.sendMessageToUser(anotherUser, message);
-            } catch (IOException e) {
-                LOGGER.warn("Failed to send FinishGameMessage to user " + anotherUser, e);
-            }
+        final Long anotherUser;
+        try {
+            anotherUser = session.getAnotherPlayer(userId);
+        } catch (NullPointerException e) {
+            LOGGER.info("GameSession was already closed");
+            return;
         }
-        forceTerminate(session, true);
+        message.setWon(true);
+        if (session.compareAndSetStepCount(curCount, curCount + 1)) {
+            if (gameSocketService.isConnected(anotherUser)) {
+                try {
+                    gameSocketService.sendMessageToUser(anotherUser, message);
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to send FinishGameMessage to user " + anotherUser, e);
+                }
+            }
+            forceTerminate(session, true);
+            userService.increaseScore(anotherUser);
+        }
     }
 
-    public AbstractMap.SimpleEntry<Long, List<Point>> handleTask(Long userId, List<Point> points) {
+    public AbstractMap.SimpleEntry<Long, List<Point>> handleTask(Long userId, List<Point> points, int curCount) {
         final GameSession session = gameSessions.get(userId);
         if (session.isFinished()) {
             return null;
@@ -148,14 +163,18 @@ public class GameSessionService {
             final List<Point> resultPoints = session.getGame().iterationOfGame(points);
             if (resultPoints == null) {
                 try {
-                    infoMessage.setMessage("repeat " + session.getGame().getError());
-                    gameSocketService.sendMessageToUser(userId, infoMessage);
+                    if (session.getGame().getError() != null) {
+                        infoMessage.setMessage("repeat " + session.getGame().getError());
+                        gameSocketService.sendMessageToUser(userId, infoMessage);
+                    }
                 } catch (IOException e) {
                     LOGGER.warn("Failed to send RepeatGameMessage to user " + userId, e);
                 }
             } else {
-                session.setWaiter(userId);
-                return new AbstractMap.SimpleEntry<>(session.getAnotherPlayer(userId), resultPoints);
+                if (session.compareAndSetStepCount(curCount, curCount + 1)) {
+                    session.setWaiter(userId);
+                    return new AbstractMap.SimpleEntry<>(session.getAnotherPlayer(userId), resultPoints);
+                }
             }
         } else {
             try {

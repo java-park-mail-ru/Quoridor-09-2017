@@ -5,11 +5,13 @@ import application.game.messages.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class MessageSerializationTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -28,12 +30,12 @@ public class MessageSerializationTest {
                 assertTrue(fromJson instanceof JoinGame);
     }
 
-    private static final String COORDINATES = "{\"class\":\"Coordinates\",\"coordinates\":\"1 2 3 4\"}";
+    private static final String COORDINATES = "{\"class\":\"Coordinates\",\"coordinates\":[1,2,3,4]}";
 
     @Test
     public void coordinatesWriteTest() throws IOException {
         final Coordinates request = new Coordinates();
-        request.setCoordinates("1 2 3 4");
+        request.setCoordinates(Arrays.asList(1, 2, 3, 4));
         assertEquals(COORDINATES, objectMapper.writeValueAsString(request));
     }
 
@@ -41,45 +43,53 @@ public class MessageSerializationTest {
     public void coordinatesReadTest() throws IOException {
         final Message fromJson = objectMapper.readValue(COORDINATES, Message.class);
         assertTrue(fromJson instanceof Coordinates);
-        assertEquals(((Coordinates) fromJson).getCoordinates(), "1 2 3 4");
+        assertEquals(((Coordinates) fromJson).getCoordinates(), Arrays.asList(1, 2, 3, 4));
     }
 
     @Test
-    public void coordinatesFromListToString() {
+    public void coordinatesFromPointToInt() {
         final Coordinates request = new Coordinates();
         final List<Point> points = new ArrayList<>();
         points.add(new Point(5, 6));
         points.add(new Point(7, 8));
-        request.fromListToString(points);
-        assertEquals(request.getCoordinates(), "5 6 7 8");
+        request.fromPointListToIntArray(points);
+        assertEquals(request.getCoordinates(), Arrays.asList(5, 6, 7, 8));
     }
 
     @Test
-    public void coordinatesFromStringToList() throws HandleExeption {
+    public void coordinatesFromIntToPoint() throws HandleExeption {
         final List<Point> points = new ArrayList<>();
         points.add(new Point(2, 3));
         points.add(new Point(6, 7));
         final Coordinates request = new Coordinates();
-        request.setCoordinates("2 3 6 7");
-        assertEquals(request.fromStringToList().size(), points.size());
-        assertEquals(request.fromStringToList().get(0).getFirstCoordinate(), points.get(0).getFirstCoordinate());
-        assertEquals(request.fromStringToList().get(0).getSecondCoordinate(), points.get(0).getSecondCoordinate());
-        assertEquals(request.fromStringToList().get(1).getFirstCoordinate(), points.get(1).getFirstCoordinate());
-        assertEquals(request.fromStringToList().get(1).getSecondCoordinate(), points.get(1).getSecondCoordinate());
+        request.setCoordinates(Arrays.asList(2, 3, 6, 7));
+        assertEquals(request.fromIntArrayToPointList().size(), points.size());
+        assertEquals(request.fromIntArrayToPointList().get(0).getFirstCoordinate(), points.get(0).getFirstCoordinate());
+        assertEquals(request.fromIntArrayToPointList().get(0).getSecondCoordinate(), points.get(0).getSecondCoordinate());
+        assertEquals(request.fromIntArrayToPointList().get(1).getFirstCoordinate(), points.get(1).getFirstCoordinate());
+        assertEquals(request.fromIntArrayToPointList().get(1).getSecondCoordinate(), points.get(1).getSecondCoordinate());
     }
 
     @Test(expected = HandleExeption.class)
     public void badCoordinatesTest() throws HandleExeption {
         final Coordinates coordinates = new Coordinates();
-        coordinates.setCoordinates("asdf");
-        coordinates.fromStringToList().size();
+        coordinates.setCoordinates(Arrays.asList(-2, 0));
+        coordinates.fromIntArrayToPointList();
     }
 
     @Test(expected = HandleExeption.class)
+    public void wrongNumberOfCoordinates() throws HandleExeption {
+        final Coordinates coordinates = new Coordinates();
+        coordinates.setCoordinates(Arrays.asList(2, 8, 2));
+        coordinates.fromIntArrayToPointList();
+    }
+
+    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
+    @Test(expected = HandleExeption.class)
     public void emptyCoordinatesTest() throws HandleExeption {
         final Coordinates coordinates = new Coordinates();
-        coordinates.setCoordinates("");
-        coordinates.fromStringToList().size();
+        coordinates.setCoordinates(Arrays.asList());
+        coordinates.fromIntArrayToPointList();
     }
 
     private static final String FINISH = "{\"class\":\"FinishGame\",\"won\":true}";
@@ -114,13 +124,12 @@ public class MessageSerializationTest {
         assertEquals(((InfoMessage) fromJson).getMessage(), "repeat");
     }
 
-    private static final String INIT = "{\"class\":\"InitGame\",\"self\":1,\"enemy\":2,\"isFirst\":true}";
+    private static final String INIT = "{\"class\":\"InitGame\",\"enemy\":\"Ivan\",\"isFirst\":true}";
 
     @Test
     public void initGameWriteTest() throws IOException {
         final InitGame request = new InitGame();
-        request.setSelf(1L);
-        request.setEnemy(2L);
+        request.setEnemy("Ivan");
         request.setIsFirst(true);
         assertEquals(INIT, objectMapper.writeValueAsString(request));
     }
@@ -129,8 +138,7 @@ public class MessageSerializationTest {
     public void initGameReadTest() throws IOException {
         final Message fromJson = objectMapper.readValue(INIT, Message.class);
         assertTrue(fromJson instanceof InitGame);
-        assertTrue(((InitGame) fromJson).getSelf() == 1L);
-        assertTrue(((InitGame) fromJson).getEnemy() == 2L);
+        assertEquals(((InitGame) fromJson).getEnemy(), "Ivan");
         assertTrue(((InitGame) fromJson).getIsFirst());
     }
 }

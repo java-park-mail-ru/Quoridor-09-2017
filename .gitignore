@@ -12,6 +12,7 @@
 
 # Log file
 *.log
+*.gz
 
 # Package Files
 *.jar

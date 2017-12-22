@@ -13,8 +13,7 @@ import org.springframework.stereotype.Service;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.*;
 
 @Service
 public class GameService {
@@ -27,6 +26,15 @@ public class GameService {
     private ConcurrentHashMap<Long, List<Point>> tasks = new ConcurrentHashMap<>();
 
     @NotNull
+    private ConcurrentHashMap<Long, ScheduledFuture> timers = new ConcurrentHashMap<>();
+
+    @NotNull
+    private static final int THREAD_COUNT = 10;
+
+    @NotNull
+    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(THREAD_COUNT);
+
+    @NotNull
     private final UserService userService;
 
     @NotNull
@@ -34,6 +42,13 @@ public class GameService {
 
     @NotNull
     private final GameSessionService gameSessionService;
+
+    @NotNull
+    private final ConcurrentHashMap<Long, Integer> anticipatedSteps = new ConcurrentHashMap<>();
+
+    public ConcurrentHashMap<Long, Integer> getAnticipatedSteps() {
+        return anticipatedSteps;
+    }
 
     public GameService(UserService userService,
                        GameSocketService gameSocketService,
@@ -60,7 +75,7 @@ public class GameService {
         }
         final List<Point> points;
         try {
-            points = coordinates.fromStringToList();
+            points = coordinates.fromIntArrayToPointList();
         } catch (HandleExeption e) {
             try {
                 final InfoMessage infoMessage = new InfoMessage();
@@ -75,6 +90,37 @@ public class GameService {
         gameStep();
     }
 
+    private void setTimer(Long prevUserId, Long newUserId) {
+        final ScheduledFuture oldTimer = timers.remove(prevUserId);
+        if (oldTimer != null) {
+            oldTimer.cancel(false);
+        }
+        final int stepCount;
+        try {
+            stepCount = gameSessionService.getGameSession(newUserId).getStepCount();
+        } catch (NullPointerException e) {
+            LOGGER.info("GameSession was already closed");
+            return;
+        }
+        final Runnable task = () -> {
+            final GameSession gameSession = gameSessionService.getGameSession(newUserId);
+            if (gameSession != null && gameSession.compareAndSetStepCount(stepCount, stepCount + 1)) {
+                if (Objects.equals(gameSession.getFirstUserId(), newUserId)) {
+                    gameSession.setFirstResult(false);
+                    gameSession.setSecondResult(true);
+                    userService.increaseScore(gameSession.getSecondUserId());
+                } else {
+                    gameSession.setFirstResult(true);
+                    gameSession.setSecondResult(false);
+                    userService.increaseScore(gameSession.getFirstUserId());
+                }
+                gameSessionService.finishGame(gameSession);
+                gameSessionService.forceTerminate(gameSession, false);
+            }
+        };
+        timers.put(newUserId, executorService.schedule(task, 1, TimeUnit.MINUTES));
+    }
+
     private void tryStartGame() {
         final Set<Long> matchedPlayers = new LinkedHashSet<>();
         while (waiters.size() >= 2 || waiters.size() >= 1 && matchedPlayers.size() >= 1) {
@@ -85,7 +131,13 @@ public class GameService {
             matchedPlayers.add(candidate);
             if (matchedPlayers.size() == 2) {
                 final Iterator<Long> iterator = matchedPlayers.iterator();
-                gameSessionService.startGame(iterator.next(), iterator.next());
+                final Long userId1 = iterator.next();
+                final Long userId2 = iterator.next();
+                anticipatedSteps.put(userId1, 0);
+                anticipatedSteps.put(userId2, 0);
+                gameSessionService.startGame(userId1, userId2);
+                final Long waiter = gameSessionService.getGameSession(userId1).getWaiter();
+                setTimer(waiter, gameSessionService.getGameSession(waiter).getAnotherPlayer(waiter));
                 matchedPlayers.clear();
             }
         }
@@ -100,39 +152,32 @@ public class GameService {
     //visible for testing
     void putCoordinates(@NotNull Long userId, @NotNull Coordinates coordinates) {
         try {
-            tasks.put(userId, coordinates.fromStringToList());
+            tasks.put(userId, coordinates.fromIntArrayToPointList());
         } catch (HandleExeption ignored) {
             LOGGER.error(ignored.getMessage());
         }
     }
 
+    @SuppressWarnings("OverlyComplexMethod")
     public Map<Long, List<Point>> gameStep() {
         final Map<Long, List<Point>> messagesToSend = new HashMap<>();
         final Set<Long> users = tasks.keySet();
         for (Long curUser : users) {
             final AbstractMap.SimpleEntry<Long, List<Point>> messageToSend = gameSessionService.handleTask(
-                    curUser, tasks.remove(curUser));
+                    curUser, tasks.remove(curUser), anticipatedSteps.get(curUser));
             if (messageToSend != null) {
+                anticipatedSteps.put(curUser, anticipatedSteps.get(curUser) + 1);
+                anticipatedSteps.put(messageToSend.getKey(), anticipatedSteps.get(messageToSend.getKey()) + 1);
                 messagesToSend.put(messageToSend.getKey(), messageToSend.getValue());
+                setTimer(curUser, messageToSend.getKey());
             }
         }
 
         final List<GameSession> sessionsToTerminate = new ArrayList<>();
-        final List<GameSession> sessionsToFinish = new ArrayList<>();
-        for (GameSession session : gameSessionService.getSessions()) {
-            if (session.tryFinishGame()) {
-                sessionsToFinish.add(session);
-                continue;
-            }
-            if (!gameSessionService.checkHealthState(session)) {
-                sessionsToTerminate.add(session);
-            }
-        }
-
         final Coordinates coordinates = new Coordinates();
         for (Map.Entry<Long, List<Point>> message : messagesToSend.entrySet()) {
             try {
-                coordinates.fromListToString(message.getValue());
+                coordinates.fromPointListToIntArray(message.getValue());
                 gameSocketService.sendMessageToUser(message.getKey(), coordinates);
             } catch (IOException e) {
                 try {
@@ -144,6 +189,22 @@ public class GameService {
                     sessionsToTerminate.add(gameSessionService.getGameSession(message.getKey()));
                     LOGGER.error("Can't send data to user ", e, ex);
                 }
+            }
+        }
+
+        final List<GameSession> sessionsToFinish = new ArrayList<>();
+        for (GameSession session : gameSessionService.getSessions()) {
+            if (session.tryFinishGame()) {
+                if (session.getFirstResult()) {
+                    userService.increaseScore(session.getFirstUserId());
+                } else if (session.getSecondResult()) {
+                    userService.increaseScore(session.getSecondUserId());
+                }
+                sessionsToFinish.add(session);
+                continue;
+            }
+            if (!gameSessionService.checkHealthState(session)) {
+                sessionsToTerminate.add(session);
             }
         }
 

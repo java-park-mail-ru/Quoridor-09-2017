@@ -10,6 +10,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 
 @SuppressWarnings({"SqlDialectInspection", "SqlNoDataSourceInspection"})
 @Service
@@ -26,6 +28,9 @@ public class UserService {
 
     private static final RowMapper<User> USER_MAP = (res, num) -> new User(res.getLong("id"),
             res.getString("login"), res.getString("password"), res.getString("email"));
+
+    private static final RowMapper<User> USER_MAP_SHORT = (res, num) ->
+            new User(res.getString("login"), res.getInt("score"));
 
     @SuppressWarnings("ConstantConditions")
     public long addUser(String login, String password, String email) {
@@ -124,5 +129,27 @@ public class UserService {
 
     public boolean checkPassword(long userId, String password) {
         return this.getUserById(userId).getPassword().equals(password);
+    }
+
+    public void increaseScore(long userId) {
+        try {
+            template.update("UPDATE users SET score = score + 1 WHERE id = ?", userId);
+        } catch (DataAccessException e) {
+            LOGGER.error("Can't increase score of user with id = " + userId);
+        }
+    }
+
+    public List<User> getScoreBoard(Long offset, Long limit) {
+        try {
+            return template.query(
+                    "SELECT users.login, users.score FROM users ORDER BY users.score DESC OFFSET ? LIMIT ?",
+                    USER_MAP_SHORT,
+                    offset,
+                    limit
+            );
+        } catch (DataAccessException e) {
+            LOGGER.error("Can't get access to DB");
+            return null;
+        }
     }
 }

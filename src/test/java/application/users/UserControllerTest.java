@@ -1,6 +1,7 @@
 package application.users;
 
 import application.dao.UserService;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -151,5 +152,41 @@ public class UserControllerTest {
                 .content("{\"newPassword\":\"67\", \"oldPassword\":\"12345\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("error").value("Password should be 4 to 30 characters.\n"));
+    }
+
+    @Test
+    public void success_get_scoreboard() throws Exception {
+        final long testId1 = userService.addUser("user1", "12345", "user1@mail.ru");
+        final long testId2 = userService.addUser("user2", "12345", "user2@mail.ru");
+        final long testId3 = userService.addUser("user3", "12345", "user3@mail.ru");
+
+        userService.increaseScore(testId3);
+
+        userService.increaseScore(testId1);
+        userService.increaseScore(testId1);
+
+        userService.increaseScore(testId2);
+        userService.increaseScore(testId2);
+        userService.increaseScore(testId2);
+
+        mockMvc.perform(get("/scoreBoard")
+                .param("offset", "0")
+                .param("limit", "3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.scoreboard", Matchers.hasSize(3)))
+                .andExpect(jsonPath("$.scoreboard[0].userName").value("user2"))
+                .andExpect(jsonPath("$.scoreboard[0].score").value("3"))
+                .andExpect(jsonPath("$.scoreboard[1].userName").value("user1"))
+                .andExpect(jsonPath("$.scoreboard[1].score").value("2"))
+                .andExpect(jsonPath("$.scoreboard[2].userName").value("user3"))
+                .andExpect(jsonPath("$.scoreboard[2].score").value("1"));
+    }
+
+    @Test
+    public void unsuccess_get_scoreboard() throws Exception {
+        mockMvc.perform(get("/scoreBoard")
+                .param("offset", "2")
+                .param("limit", "asdf"))
+                .andExpect(status().isBadRequest());
     }
 }

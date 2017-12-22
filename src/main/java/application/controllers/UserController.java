@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
+import java.util.List;
 
 @CrossOrigin(origins = {"https://jees-quoridor.herokuapp.com", "https://quoridor-jees.herokuapp.com", "http://localhost:8080", "http://127.0.0.1:8080"})
 @RestController
@@ -121,5 +122,16 @@ public class UserController {
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Can't update password"));
         }
+    }
+
+    @GetMapping(path = "/scoreBoard")
+    public ResponseEntity getScoreboard(@RequestParam long offset, @RequestParam long limit) {
+        final List<User> scoreBoard = userService.getScoreBoard(offset, limit);
+        if (scoreBoard != null) {
+            return ResponseEntity.status(HttpStatus.OK).body(new ScoreboardResponse(scoreBoard));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BadResponse("Can't get scoreboard"));
+        }
+
     }
 }

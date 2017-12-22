@@ -4,23 +4,14 @@ import application.websocket.Message;
 
 @SuppressWarnings("unused")
 public class InitGame extends Message {
-    private Long self;
-    private Long enemy;
+    private String enemy;
     private Boolean isFirst;
 
-    public Long getSelf() {
-        return self;
-    }
-
-    public void setSelf(Long self) {
-        this.self = self;
-    }
-
-    public Long getEnemy() {
+    public String getEnemy() {
         return enemy;
     }
 
-    public void setEnemy(Long enemy) {
+    public void setEnemy(String enemy) {
         this.enemy = enemy;
     }
 
@@ -28,7 +19,7 @@ public class InitGame extends Message {
         return isFirst;
     }
 
-    public void setIsFirst(Boolean isFirst) {
-        this.isFirst = isFirst;
+    public void setIsFirst(Boolean first) {
+        isFirst = first;
     }
 }

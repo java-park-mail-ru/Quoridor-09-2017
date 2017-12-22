@@ -162,4 +162,101 @@ public class MovementWithWallsTest {
         movement.add(point3);
         assertNull(game.iterationOfGame(movement));
     }
+
+    @Test
+    public void cant_block_move_in_field_middle() {
+        final List<Point> movement = new ArrayList<>();
+        movement.add(new Point(7, 2));
+        movement.add(new Point(7, 0));
+        assertNotNull(game.iterationOfGame(movement));
+        movement.clear();
+
+        movement.add(new Point(9, 2));
+        movement.add(new Point(9, 0));
+        assertNotNull(game.iterationOfGame(movement));
+        movement.clear();
+
+        movement.add(new Point(7, 6));
+        movement.add(new Point(7, 4));
+        assertNotNull(game.iterationOfGame(movement));
+        movement.clear();
+
+        movement.add(new Point(9, 6));
+        movement.add(new Point(9, 4));
+        assertNotNull(game.iterationOfGame(movement));
+        movement.clear();
+
+        movement.add(new Point(6, 3));
+        movement.add(new Point(8, 3));
+        assertNotNull(game.iterationOfGame(movement));
+        movement.clear();
+
+        movement.add(new Point(8, 3));
+        movement.add(new Point(10, 3));
+        assertNotNull(game.iterationOfGame(movement));
+        movement.clear();
+
+        movement.add(new Point(7, 9));
+        movement.add(new Point(7, 7));
+        assertNull(game.iterationOfGame(movement));
+    }
+
+    @Test
+    public void cant_build_square_boundary_around_enemy() {
+        final List<Point> movement = new ArrayList<>();
+        movement.add(new Point(14, 9));
+        movement.add(new Point(16, 9));
+        assertNotNull(game.iterationOfGame(movement));
+        movement.clear();
+
+        movement.add(new Point(0, 9));
+        movement.add(new Point(2, 9));
+        assertNotNull(game.iterationOfGame(movement));
+        movement.clear();
+
+        movement.add(new Point(13, 9));
+        movement.add(new Point(13, 7));
+        assertNull(game.iterationOfGame(movement));
+    }
+
+    @Test
+    public void cant_build_square_boundary_around_me() {
+        final List<Point> movement = new ArrayList<>();
+        movement.add(new Point(0, 9));
+        movement.add(new Point(2, 9));
+        assertNotNull(game.iterationOfGame(movement));
+        movement.clear();
+
+        movement.add(new Point(14, 9));
+        movement.add(new Point(16, 9));
+        assertNotNull(game.iterationOfGame(movement));
+        movement.clear();
+
+        movement.add(new Point(3, 9));
+        movement.add(new Point(3, 7));
+        assertNull(game.iterationOfGame(movement));
+    }
+
+    @Test
+    public void cant_add_more_then_8_walls() {
+        final List<Point> movement = new ArrayList<>();
+        int x = 16;
+        for (int i = 4; i > 0; i--) {
+            movement.add(new Point(1, x));
+            movement.add(new Point(1, x - 2));
+            assertNotNull(game.iterationOfGame(movement));
+            assertNotNull(game.iterationOfGame(movement));
+            movement.clear();
+            movement.add(new Point(3, x));
+            movement.add(new Point(3, x - 2));
+            assertNotNull(game.iterationOfGame(movement));
+            assertNotNull(game.iterationOfGame(movement));
+            movement.clear();
+            x -= 3;
+        }
+        movement.add(new Point(5, 16));
+        movement.add(new Point(5, 14));
+        assertNull(game.iterationOfGame(movement));
+        assertNull(game.iterationOfGame(movement));
+    }
 }

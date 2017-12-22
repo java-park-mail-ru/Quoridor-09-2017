@@ -1,5 +1,6 @@
 package application.game.handlers;
 
+import application.game.GameService;
 import application.game.GameSessionService;
 import application.game.messages.FinishGame;
 import application.websocket.MessageHandler;
@@ -15,12 +16,17 @@ public class FinishGameHandler extends MessageHandler<FinishGame> {
     private GameSessionService gameSessionService;
 
     @NotNull
+    private GameService gameService;
+
+    @NotNull
     private MessageHandlerContainer messageHandlerContainer;
 
     public FinishGameHandler(@NotNull GameSessionService gameSessionService,
+                           @NotNull GameService gameService,
                            @NotNull MessageHandlerContainer messageHandlerContainer) {
         super(FinishGame.class);
         this.gameSessionService = gameSessionService;
+        this.gameService = gameService;
         this.messageHandlerContainer = messageHandlerContainer;
     }
 
@@ -31,6 +37,6 @@ public class FinishGameHandler extends MessageHandler<FinishGame> {
 
     @Override
     public void handle(@NotNull FinishGame message, @NotNull Long userId) {
-        gameSessionService.handleUnexpectedEnding(userId, message);
+        gameSessionService.handleUnexpectedEnding(userId, message, gameService.getAnticipatedSteps().get(userId));
     }
 }

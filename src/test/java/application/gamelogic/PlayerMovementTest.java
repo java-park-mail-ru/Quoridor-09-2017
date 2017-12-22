@@ -134,7 +134,7 @@ public class PlayerMovementTest {
         final Long userId3 = 3L;
         final Long userId4 = 4L;
         final Game gameDim3 = new Game(3, userId3, userId4);
-        final List<Point> movement = new ArrayList<>();
+        List<Point> movement = new ArrayList<>();
 
         final Point point1 = new Point(2, 2);
         movement.add(point1);
@@ -150,8 +150,9 @@ public class PlayerMovementTest {
         assertTrue(Objects.equals(gameDim3.getPlayers().get(gameDim3.getPlayerNumber()).getUserId(), userId4));
         final Point point2 = new Point(4, 2);
         movement.add(point2);
-        //second player hase won, so method iterationOfGame returning null
-        assertNull(gameDim3.iterationOfGame(movement));
+        movement = gameDim3.iterationOfGame(movement);
+        assertEquals(movement.get(0).getFirstCoordinate(), 0);
+        assertEquals(movement.get(0).getSecondCoordinate(), 2);
         assertTrue(gameDim3.isFinished());
         assertTrue(gameDim3.getPlayers().get(1).haveWon());
         //check final coordinates

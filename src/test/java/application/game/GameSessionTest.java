@@ -15,6 +15,8 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 
+import application.dao.User;
+import application.dao.UserService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -32,16 +34,20 @@ public class GameSessionTest {
     private GameSession testGameSession;
 
     private GameSessionService gameSessionService;
+    @SuppressWarnings("FieldCanBeLocal")
     private GameSocketService gameSocketService;
 
     @Before
     public void setup() throws IOException {
         gameSocketService = Mockito.mock(GameSocketService.class);
-        gameSessionService = new GameSessionService(gameSocketService);
+        final UserService userService = Mockito.mock(UserService.class);
+        gameSessionService = new GameSessionService(gameSocketService, userService);
         userId1 = 1L;
         userId2 = 2L;
         waiter = userId2;
         testGameSession = new GameSession(userId1, userId2, waiter, gameSessionService);
+        when(userService.getUserById(1L)).thenReturn(new User(1L, "Ivan", "12345", "Ivan@mail.ru"));
+        when(userService.getUserById(2L)).thenReturn(new User(2L, "Petr", "67890", "Petr@mail.ru"));
         when(gameSocketService.isConnected(userId1)).thenReturn(true);
         when(gameSocketService.isConnected(userId2)).thenReturn(true);
         doNothing().when(gameSocketService).sendMessageToUser(anyLong(), any(Message.class));
@@ -83,14 +89,14 @@ public class GameSessionTest {
         assertEquals(gameSession.getWaiter(), userId2);
         final List<Point> movement = new ArrayList<>();
         movement.add(new Point(2, 8));
-        assertNotNull(gameSessionService.handleTask(userId1, movement));
+        assertNotNull(gameSessionService.handleTask(userId1, movement, gameSession.getStepCount()));
         assertEquals(gameSession.getWaiter(), userId1);
-        assertNotNull(gameSessionService.handleTask(userId2, movement));
+        assertNotNull(gameSessionService.handleTask(userId2, movement, gameSession.getStepCount()));
         assertEquals(gameSession.getWaiter(), userId2);
 
         movement.clear();
         movement.add(new Point(4, 8));
-        assertNull(gameSessionService.handleTask(userId2, movement));
+        assertNull(gameSessionService.handleTask(userId2, movement, gameSession.getStepCount()));
         assertEquals(gameSession.getWaiter(), userId2);
     }
 
@@ -101,7 +107,7 @@ public class GameSessionTest {
         gameSession.setWaiter(userId2);
         final List<Point> movement = new ArrayList<>();
         movement.add(new Point(2, 8));
-        AbstractMap.SimpleEntry<Long, List<Point>> result = gameSessionService.handleTask(userId1, movement);
+        AbstractMap.SimpleEntry<Long, List<Point>> result = gameSessionService.handleTask(userId1, movement, gameSession.getStepCount());
         assertEquals(result.getKey(), userId2);
         assertEquals(result.getValue().size(), 1);
         assertEquals(result.getValue().get(0).getFirstCoordinate(), 14);
@@ -110,7 +116,7 @@ public class GameSessionTest {
 
         movement.add(new Point(1, 2));
         movement.add(new Point(1, 0));
-        result = gameSessionService.handleTask(userId2, movement);
+        result = gameSessionService.handleTask(userId2, movement, gameSession.getStepCount());
         assertEquals(result.getKey(), userId1);
         assertEquals(result.getValue().size(), 2);
         assertEquals(result.getValue().get(0).getFirstCoordinate(), 15);
@@ -128,46 +134,46 @@ public class GameSessionTest {
         final List<Point> movement = new ArrayList<>();
         //1 iteration
         movement.add(new Point(2, 8));
-        gameSessionService.handleTask(userId1, movement);
-        gameSessionService.handleTask(userId2, movement);
+        gameSessionService.handleTask(userId1, movement, gameSession.getStepCount());
+        gameSessionService.handleTask(userId2, movement, gameSession.getStepCount());
         movement.clear();
         //2 iteration
         movement.add(new Point(4, 8));
-        gameSessionService.handleTask(userId1, movement);
-        gameSessionService.handleTask(userId2, movement);
+        gameSessionService.handleTask(userId1, movement, gameSession.getStepCount());
+        gameSessionService.handleTask(userId2, movement, gameSession.getStepCount());
         movement.clear();
         //3 iteration
         movement.add(new Point(6, 8));
-        gameSessionService.handleTask(userId1, movement);
-        gameSessionService.handleTask(userId2, movement);
+        gameSessionService.handleTask(userId1, movement, gameSession.getStepCount());
+        gameSessionService.handleTask(userId2, movement, gameSession.getStepCount());
         movement.clear();
         //4 iteration
         movement.add(new Point(8, 8));
-        gameSessionService.handleTask(userId1, movement);
+        gameSessionService.handleTask(userId1, movement, gameSession.getStepCount());
         movement.clear();
         movement.add(new Point(10, 8));
-        gameSessionService.handleTask(userId2, movement);
+        gameSessionService.handleTask(userId2, movement, gameSession.getStepCount());
         movement.clear();
         //5 iteration
         movement.add(new Point(10, 8));
-        gameSessionService.handleTask(userId1, movement);
+        gameSessionService.handleTask(userId1, movement, gameSession.getStepCount());
         movement.clear();
         movement.add(new Point(12, 8));
-        gameSessionService.handleTask(userId2, movement);
+        gameSessionService.handleTask(userId2, movement, gameSession.getStepCount());
         movement.clear();
         //6 iteration
         movement.add(new Point(12, 8));
-        gameSessionService.handleTask(userId1, movement);
+        gameSessionService.handleTask(userId1, movement, gameSession.getStepCount());
         movement.clear();
         movement.add(new Point(14, 8));
-        gameSessionService.handleTask(userId2, movement);
+        gameSessionService.handleTask(userId2, movement, gameSession.getStepCount());
         movement.clear();
         //7 iteration
         movement.add(new Point(14, 8));
-        gameSessionService.handleTask(userId1, movement);
+        gameSessionService.handleTask(userId1, movement, gameSession.getStepCount());
         movement.clear();
         movement.add(new Point(16, 8));
-        gameSessionService.handleTask(userId2, movement);
+        gameSessionService.handleTask(userId2, movement, gameSession.getStepCount());
         movement.clear();
 
         assertTrue(gameSession.tryFinishGame());
@@ -182,24 +188,24 @@ public class GameSessionTest {
         gameSession.setWaiter(userId2);
 
         final List<Point> movement = new ArrayList<>();
-        assertNull(gameSessionService.handleTask(userId1, movement));
+        assertNull(gameSessionService.handleTask(userId1, movement, gameSession.getStepCount()));
         assertEquals(gameSession.getWaiter(), userId2);
 
         movement.add(new Point(1, 8));
-        assertNull(gameSessionService.handleTask(userId1, movement));
+        assertNull(gameSessionService.handleTask(userId1, movement, gameSession.getStepCount()));
         assertEquals(gameSession.getWaiter(), userId2);
         movement.clear();
 
         movement.add(new Point(16, 9));
         movement.add(new Point(16, 7));
-        assertNull(gameSessionService.handleTask(userId1, movement));
+        assertNull(gameSessionService.handleTask(userId1, movement, gameSession.getStepCount()));
         assertEquals(gameSession.getWaiter(), userId2);
         movement.clear();
 
         movement.add(new Point(2, 8));
         movement.add(new Point(4, 8));
         movement.add(new Point(6, 8));
-        assertNull(gameSessionService.handleTask(userId1, movement));
+        assertNull(gameSessionService.handleTask(userId1, movement, gameSession.getStepCount()));
         assertEquals(gameSession.getWaiter(), userId2);
     }
 }

@@ -38,6 +38,17 @@ public class Field {
         field.get(firstSize - 1).set(secondSize / 2, 'E');
     }
 
+    public Field(Field other) {
+        this.firstSize = other.firstSize;
+        this.secondSize = other.secondSize;
+        for (int i = 0; i < this.firstSize; i++) {
+            final List<Character> line = new ArrayList<>();
+            line.addAll(other.field.get(i));
+            field.add(line);
+        }
+        this.walls.addAll(other.walls);
+    }
+
     public char getCellStatus(Point point) {
         return field.get(point.getFirstCoordinate()).get(point.getSecondCoordinate());
     }
