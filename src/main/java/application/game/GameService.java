@@ -43,6 +43,13 @@ public class GameService {
     @NotNull
     private final GameSessionService gameSessionService;
 
+    @NotNull
+    private final ConcurrentHashMap<Long, Integer> anticipatedSteps = new ConcurrentHashMap<>();
+
+    public ConcurrentHashMap<Long, Integer> getAnticipatedSteps() {
+        return anticipatedSteps;
+    }
+
     public GameService(UserService userService,
                        GameSocketService gameSocketService,
                        GameSessionService gameSessionService) {
@@ -124,9 +131,12 @@ public class GameService {
             matchedPlayers.add(candidate);
             if (matchedPlayers.size() == 2) {
                 final Iterator<Long> iterator = matchedPlayers.iterator();
-                final Long userId = iterator.next();
-                gameSessionService.startGame(userId, iterator.next());
-                final Long waiter = gameSessionService.getGameSession(userId).getWaiter();
+                final Long userId1 = iterator.next();
+                final Long userId2 = iterator.next();
+                anticipatedSteps.put(userId1, 0);
+                anticipatedSteps.put(userId2, 0);
+                gameSessionService.startGame(userId1, userId2);
+                final Long waiter = gameSessionService.getGameSession(userId1).getWaiter();
                 setTimer(waiter, gameSessionService.getGameSession(waiter).getAnotherPlayer(waiter));
                 matchedPlayers.clear();
             }
@@ -154,8 +164,10 @@ public class GameService {
         final Set<Long> users = tasks.keySet();
         for (Long curUser : users) {
             final AbstractMap.SimpleEntry<Long, List<Point>> messageToSend = gameSessionService.handleTask(
-                    curUser, tasks.remove(curUser), gameSessionService.getGameSession(curUser).getStepCount());
+                    curUser, tasks.remove(curUser), anticipatedSteps.get(curUser));
             if (messageToSend != null) {
+                anticipatedSteps.put(curUser, anticipatedSteps.get(curUser));
+                anticipatedSteps.put(messageToSend.getKey(), anticipatedSteps.get(messageToSend.getKey()));
                 messagesToSend.put(messageToSend.getKey(), messageToSend.getValue());
                 setTimer(curUser, messageToSend.getKey());
             }

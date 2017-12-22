@@ -71,6 +71,8 @@ public class GameServiceTest {
     public void user_send_coordinates_to_user_successfully() {
         gameService.addUser(userId1);
         gameService.addUser(userId2);
+        gameService.getAnticipatedSteps().put(userId1, 0);
+        gameService.getAnticipatedSteps().put(userId2, 0);
         gameSessionService.getGameSessions().get(userId1).setWaiter(userId2);
         final List<Point> movement = new ArrayList<>();
         movement.add(new Point(0, 6));
@@ -87,6 +89,8 @@ public class GameServiceTest {
         movement.clear();
         movement.add(new Point(0, 1));
         movement.add(new Point(2, 1));
+        gameService.getAnticipatedSteps().put(userId1, 1);
+        gameService.getAnticipatedSteps().put(userId2, 1);
         coordinates.fromPointListToIntArray(movement);
         gameService.putCoordinates(userId2, coordinates);
         result = gameService.gameStep();
@@ -103,6 +107,8 @@ public class GameServiceTest {
     public void check_queue_of_users() {
         gameService.addUser(userId1);
         gameService.addUser(userId2);
+        gameService.getAnticipatedSteps().put(userId1, 0);
+        gameService.getAnticipatedSteps().put(userId2, 0);
         gameSessionService.getGameSessions().get(userId1).setWaiter(userId2);
         final List<Point> movement = new ArrayList<>();
         movement.add(new Point(0, 6));
@@ -113,6 +119,8 @@ public class GameServiceTest {
 
         movement.clear();
         movement.add(new Point(0, 4));
+        gameService.getAnticipatedSteps().put(userId1, 1);
+        gameService.getAnticipatedSteps().put(userId2, 1);
         coordinates.fromPointListToIntArray(movement);
         gameService.putCoordinates(userId1, coordinates);
         assertTrue(gameService.gameStep().isEmpty());
