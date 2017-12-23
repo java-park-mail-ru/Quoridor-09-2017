@@ -66,7 +66,7 @@ public class GameSocketHandler extends TextWebSocketHandler {
     @SuppressWarnings("OverlyBroadCatchBlock")
     private void collectMessage(Long userId, TextMessage textMessage) {
         final InfoMessage infoMessage = new InfoMessage();
-        infoMessage.setMessage("repeat");
+        infoMessage.setMessage("Повторите ход");
         final Message message;
         try {
             message = objectMapper.readValue(textMessage.getPayload(), Message.class);
