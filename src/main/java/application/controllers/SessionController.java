@@ -15,7 +15,6 @@ import application.utils.responses.SuccessResponse;
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 
-// "https://jees-quoridor.herokuapp.com", "https://quoridor-jees.herokuapp.com",
 @CrossOrigin(origins = {"http://localhost:8080", "http://127.0.0.1:8080", "http://quoridor.ru"})
 @RestController
 public class SessionController {
